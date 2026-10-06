@@ -1,0 +1,34 @@
+# Frontend
+frontend/node_modules/
+frontend/build/
+frontend/.env
+frontend/.env.*
+!frontend/.env.example
+
+# Backend generated files
+backend/.gradle/
+backend/build/
+backend/bin/
+backend/target/
+backend/.idea/
+backend/.vscode/
+
+# Sensitive backend configuration
+backend/src/main/resources/application.properties
+backend/src/main/resources/application-local.properties
+
+# IDE
+.idea/
+.vscode/
+
+# VS Code generated modernization files
+.github/modernize/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# OS
+.DS_Store
+Thumbs.db
