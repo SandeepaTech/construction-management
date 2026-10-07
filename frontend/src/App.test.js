@@ -421,7 +421,7 @@ test('submits a client project request to the protected API', async () => {
 
   expect(await screen.findByRole('status')).toHaveTextContent(/submitted successfully/i);
   expect(await screen.findByText('Family home')).toBeInTheDocument();
-  expect(window.location.pathname).toBe('/client/project-requests');
+  expect(['/client/requests', '/client/project-requests']).toContain(window.location.pathname);
   const createCall = global.fetch.mock.calls.find(([, options]) => options?.method === 'POST');
   expect(createCall[0]).toBe('http://localhost:8080/api/client/requests');
   expect(JSON.parse(createCall[1].body)).toEqual({

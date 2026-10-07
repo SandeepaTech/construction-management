@@ -31,4 +31,8 @@ backend/src/main/resources/application-local.properties
 
 # OS
 .DS_Store
-Thumbs.db
+Thumbs.dbbackend/uploads/
+grep_app.js
+
+/backend/uploads/
+

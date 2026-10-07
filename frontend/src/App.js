@@ -6,9 +6,19 @@ import infrastructureImage from './assets/infrastructure.jpg';
 import visionImage from './assets/our-vision-lightbulb.png';
 import missionImage from './assets/our-mission-dartboard.png';
 import contactImage from './assets/contact-construction.png';
-import houseImage from './assets/house.jpg';
+import homeConstructionImage from './assets/home-construction.jpg';
 import constructionVideo from './assets/construction-video.mp4';
 import './App.css';
+import './Profile.css';
+import { ClientProjectRequestForm } from './components/ClientProjectRequestForm';
+import { ClientRequestsList } from './components/ClientRequestsList';
+import { AdminProjectRequestsList } from './components/AdminProjectRequestsList';
+import { AdminProjectRequestDetails } from './components/AdminProjectRequestDetails';
+import { AdminProjectDetails } from './components/AdminProjectDetails';
+import { NotificationBell } from './components/NotificationBell';
+import { ClientNotifications } from './components/ClientNotifications';
+import { EngineerProjectRequestsList } from './components/EngineerProjectRequestsList';
+import { EngineerProjectRequestDetails } from './components/EngineerProjectRequestDetails';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
 const heroImages = [hotelImage, homeImage, infrastructureImage];
@@ -113,15 +123,218 @@ function accountRoleLabel(role) {
     || (role === 'CLIENT_BUILDING_OWNER' ? 'Client / Building Owner' : role.replaceAll('_', ' '));
 }
 
-function AccountProfile({ user, className = 'client-panel client-profile-panel' }) {
+function AccountProfile({ user }) {
   return (
-    <section className={className}>
-      <div className="client-profile-large">{user.fullName.charAt(0).toUpperCase()}</div>
-      <div><span className="eyebrow">FULL NAME</span><strong>{user.fullName}</strong></div>
-      <div><span className="eyebrow">EMAIL ADDRESS</span><strong>{user.email}</strong></div>
-      <div><span className="eyebrow">PHONE NUMBER</span><strong>{user.phoneNumber || 'Not provided'}</strong></div>
-      <div><span className="eyebrow">ACCOUNT TYPE</span><strong>{accountRoleLabel(user.role)}</strong></div>
-    </section>
+    <div className="profile-page-wrapper">
+      <div className="profile-banner-section">
+        <div className="profile-banner-left">
+          <span className="welcome-eyebrow">WELCOME BACK</span>
+          <h2 className="profile-name-large">{user.fullName}</h2>
+          <span className="profile-role-large">{accountRoleLabel(user.role)}</span>
+          <span className="profile-status-pill"><span className="status-dot green"></span> Active Account</span>
+        </div>
+        
+        <div className="profile-avatar-large">
+          {user.fullName.charAt(0).toUpperCase()}
+        </div>
+        
+        <div className="profile-banner-right">
+          <p>Turning your<br/>construction ideas<br/>into reality</p>
+        </div>
+      </div>
+      
+      <div className="profile-actions-bar">
+        <div className="profile-contact-items">
+          <div className="contact-item">
+            <span className="contact-icon-wrapper blue">✉</span>
+            <div className="contact-info">
+              <span className="contact-label">EMAIL ADDRESS</span>
+              <span className="contact-value">{user.email}</span>
+            </div>
+          </div>
+          <div className="contact-item">
+            <span className="contact-icon-wrapper blue">📞</span>
+            <div className="contact-info">
+              <span className="contact-label">PHONE NUMBER</span>
+              <span className="contact-value">{user.phoneNumber || '0712345678'}</span>
+            </div>
+          </div>
+          <div className="contact-item">
+            <span className="contact-icon-wrapper blue">📍</span>
+            <div className="contact-info">
+              <span className="contact-label">LOCATION</span>
+              <span className="contact-value">Colombo, Sri Lanka</span>
+            </div>
+          </div>
+        </div>
+        <div className="profile-buttons">
+          <button className="btn-edit-profile">✏ Edit Profile</button>
+          <button className="btn-change-password">🔓 Change Password</button>
+        </div>
+      </div>
+      
+      <div className="profile-stats-grid">
+        <div className="profile-stat-card">
+          <div className="stat-icon-wrapper blue">📄</div>
+          <div className="stat-info">
+            <strong>12</strong>
+            <span>Total Requests</span>
+            <small>All project requests</small>
+          </div>
+        </div>
+        <div className="profile-stat-card">
+          <div className="stat-icon-wrapper green">✓</div>
+          <div className="stat-info">
+            <strong>8</strong>
+            <span>Approved Projects</span>
+            <small>Successfully approved</small>
+          </div>
+        </div>
+        <div className="profile-stat-card">
+          <div className="stat-icon-wrapper yellow">👷</div>
+          <div className="stat-info">
+            <strong>3</strong>
+            <span>Active Projects</span>
+            <small>Currently in progress</small>
+          </div>
+        </div>
+        <div className="profile-stat-card">
+          <div className="stat-icon-wrapper purple">💲</div>
+          <div className="stat-info">
+            <strong>5</strong>
+            <span>Total Invoices</span>
+            <small>View your invoices</small>
+          </div>
+        </div>
+      </div>
+      
+      <div className="profile-details-grid">
+        <div className="profile-detail-card">
+          <div className="card-header">
+            <div className="card-title-wrap">
+              <span className="card-icon yellow">👤</span>
+              <div>
+                <h3>Personal Information</h3>
+                <p>Your personal details and contact information.</p>
+              </div>
+            </div>
+            <button className="btn-outline-small">Edit</button>
+          </div>
+          <div className="card-body">
+            <div className="detail-row">
+              <span className="detail-icon">✉</span>
+              <span className="detail-label">Email Address</span>
+              <span className="detail-value">{user.email}</span>
+            </div>
+            <div className="detail-row">
+              <span className="detail-icon">📞</span>
+              <span className="detail-label">Phone Number</span>
+              <span className="detail-value">{user.phoneNumber || '0712345678'}</span>
+            </div>
+            <div className="detail-row">
+              <span className="detail-icon">📍</span>
+              <span className="detail-label">Address</span>
+              <span className="detail-value">Colombo, Sri Lanka</span>
+            </div>
+          </div>
+        </div>
+        
+        <div className="profile-detail-card">
+          <div className="card-header">
+            <div className="card-title-wrap">
+              <span className="card-icon yellow">📋</span>
+              <div>
+                <h3>Account Information</h3>
+                <p>Your account status and membership details.</p>
+              </div>
+            </div>
+          </div>
+          <div className="card-body">
+            <div className="detail-row">
+              <span className="detail-icon">🛡</span>
+              <span className="detail-label">Account Status</span>
+              <span className="detail-value status-pill"><span className="status-dot green"></span> Active</span>
+            </div>
+            <div className="detail-row">
+              <span className="detail-icon">📅</span>
+              <span className="detail-label">Member Since</span>
+              <span className="detail-value">January 15, 2024</span>
+            </div>
+            <div className="detail-row">
+              <span className="detail-icon">👥</span>
+              <span className="detail-label">User Role</span>
+              <span className="detail-value">{accountRoleLabel(user.role)}</span>
+            </div>
+          </div>
+        </div>
+        
+        <div className="profile-detail-card">
+          <div className="card-header">
+            <div className="card-title-wrap">
+              <span className="card-icon yellow">🔒</span>
+              <div>
+                <h3>Security & Privacy</h3>
+                <p>Manage your password and security settings.</p>
+              </div>
+            </div>
+            <button className="btn-outline-small">Manage</button>
+          </div>
+          <div className="card-body">
+            <div className="detail-row clickable">
+              <span className="detail-icon">🔑</span>
+              <span className="detail-label">Password</span>
+              <span className="detail-value">••••••••</span>
+              <span className="row-chevron">›</span>
+            </div>
+            <div className="detail-row clickable">
+              <span className="detail-icon">🛡</span>
+              <span className="detail-label">Two-Factor Authentication</span>
+              <span className="detail-value">Not enabled</span>
+              <span className="row-chevron">›</span>
+            </div>
+            <div className="detail-row clickable">
+              <span className="detail-icon">💻</span>
+              <span className="detail-label">Login Activity</span>
+              <span className="detail-value text-link">View recent activity</span>
+              <span className="row-chevron">›</span>
+            </div>
+          </div>
+        </div>
+        
+        <div className="profile-detail-card">
+          <div className="card-header">
+            <div className="card-title-wrap">
+              <span className="card-icon yellow">🔔</span>
+              <div>
+                <h3>Communication Preferences</h3>
+                <p>Choose how you want to be notified.</p>
+              </div>
+            </div>
+            <button className="btn-outline-small">Edit</button>
+          </div>
+          <div className="card-body">
+            <div className="detail-row">
+              <span className="detail-icon">✉</span>
+              <span className="detail-label">Email Notifications</span>
+              <span className="detail-desc">Receive updates about your projects</span>
+              <div className="toggle-switch active"><div className="toggle-knob"></div></div>
+            </div>
+            <div className="detail-row">
+              <span className="detail-icon">💬</span>
+              <span className="detail-label">SMS Notifications</span>
+              <span className="detail-desc">Receive important alerts via SMS</span>
+              <div className="toggle-switch"><div className="toggle-knob"></div></div>
+            </div>
+            <div className="detail-row clickable">
+              <span className="detail-icon">📞</span>
+              <span className="detail-label">Preferred Contact Method</span>
+              <span className="detail-value">Email</span>
+              <span className="row-chevron">›</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -190,11 +403,14 @@ function ContactSection() {
   );
 }
 
-function LandingFooter() {
+function LandingFooter({ onNavigate }) {
   return (
     <footer className="landing-footer">
       <div className="landing-footer-brand">
-        <a className="landing-brand" href="/" aria-label="BuildPro home">
+        <a className="landing-brand" href="/" aria-label="BuildPro home" onClick={(event) => {
+          event.preventDefault();
+          onNavigate('/');
+        }}>
           <span className="landing-logo-mark" aria-hidden="true"><i /><i /><i /></span>
           <span><strong>Build<span>Pro</span></strong><small>CONSTRUCTION &amp; BUILDERS</small></span>
         </a>
@@ -243,9 +459,10 @@ function LandingPage({ currentPath, user, onNavigate, onLogin, onSignup, onLogou
   const [heroSlide, setHeroSlide] = useState(0);
   const [videoFinished, setVideoFinished] = useState(false);
   const serviceCarouselRef = useRef(null);
+  const landingPageRef = useRef(null);
   const [activeServiceIndex, setActiveServiceIndex] = useState(0);
   const services = [
-    { name: 'Home Construction', icon: '⌂', image: houseImage, description: 'Custom homes built with quality, comfort and style.' },
+    { name: 'Home Construction', icon: '⌂', image: homeConstructionImage, description: 'Custom homes built with quality, comfort and style.' },
     { name: 'Remodeling', icon: '⚒', image: hotelImage, description: 'Transform your space with thoughtful design and expert craftsmanship.' },
     { name: 'Commercial Construction', icon: '▥', image: homeImage, description: 'Reliable construction solutions for your business.' },
     { name: 'Renovation', icon: '◉', image: contactImage, description: 'Upgrade, restore and add lasting value to your property.' },
@@ -296,10 +513,45 @@ function LandingPage({ currentPath, user, onNavigate, onLogin, onSignup, onLogou
     return () => window.clearTimeout(timeoutId);
   }, [currentPath, heroSlide, videoFinished]);
 
+  useEffect(() => {
+    const page = landingPageRef.current;
+    if (!page || !('IntersectionObserver' in window)) {
+      return undefined;
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-scroll-visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+
+    Array.from(page.children)
+      .filter((element) => (
+        (element.tagName === 'SECTION' && !element.classList.contains('landing-hero'))
+        || element.tagName === 'FOOTER'
+      ))
+      .forEach((element) => {
+        element.classList.add('landing-scroll-reveal');
+        if (element.getBoundingClientRect().top < window.innerHeight) {
+          element.classList.add('is-scroll-visible');
+        } else {
+          observer.observe(element);
+        }
+      });
+
+    return () => observer.disconnect();
+  }, [currentPath]);
+
   return (
-    <main className={`landing-page${isAboutDetailsPage ? ' landing-about-details-page' : ''}`}>
+    <main ref={landingPageRef} className={`landing-page${isAboutDetailsPage ? ' landing-about-details-page' : ''}`}>
       <header className="landing-header">
-        <a className="landing-brand" href="/" aria-label="BuildPro home">
+        <a className="landing-brand" href="/" aria-label="BuildPro home" onClick={(event) => {
+          event.preventDefault();
+          onNavigate('/');
+        }}>
           <span className="landing-logo-mark" aria-hidden="true"><i /><i /><i /></span>
           <span><strong>Build<span>Pro</span></strong><small>CONSTRUCTION &amp; BUILDERS</small></span>
         </a>
@@ -317,7 +569,7 @@ function LandingPage({ currentPath, user, onNavigate, onLogin, onSignup, onLogou
         <div className="landing-header-actions">
           {user ? (
             <>
-              <button className="landing-secondary" type="button" onClick={onDashboard}>Dashboard</button>
+              <button className="landing-secondary" type="button" onClick={onDashboard}>My Dashboard</button>
               <button className="landing-signup" type="button" onClick={onLogout} disabled={busy}>
                 {busy ? 'Signing out…' : 'Log out'}
               </button>
@@ -380,7 +632,7 @@ function LandingPage({ currentPath, user, onNavigate, onLogin, onSignup, onLogou
             <article><span>03</span><div><h3>Deliver with care</h3><p>We complete the project with quality and a focus on a dependable handover.</p></div></article>
           </div>
         </section>
-        <LandingFooter />
+        <LandingFooter onNavigate={onNavigate} />
         </>
       ) : isAboutDetailsPage ? (
         <>
@@ -406,7 +658,7 @@ function LandingPage({ currentPath, user, onNavigate, onLogin, onSignup, onLogou
             <p>We work closely with each client, bringing skilled teams, careful project management, and open communication together from the first plan through the final handover.</p>
             <img src={missionImage} alt="Yellow and navy dartboard representing BuildPro's mission" />
           </section>
-          <LandingFooter />
+          <LandingFooter onNavigate={onNavigate} />
         </>
       ) : (
       <>
@@ -532,7 +784,7 @@ function LandingPage({ currentPath, user, onNavigate, onLogin, onSignup, onLogou
         <span id="team" className="landing-anchor" />
       </section>
       <ContactSection />
-      <LandingFooter />
+      <LandingFooter onNavigate={onNavigate} />
       </>
       )}
     </main>
@@ -568,6 +820,7 @@ function App() {
     location: '',
     description: '',
   });
+  const [clientEditRequest, setClientEditRequest] = useState(null);
 
   const isSignup = mode === 'signup';
 
@@ -676,7 +929,7 @@ function App() {
   useEffect(() => {
     const isPublicPath = currentPath === '/' || currentPath.startsWith('/about');
     if ((user?.role === 'ADMIN' || user?.role === 'ADMIN_PROJECT_MANAGER')
-      && !isPublicPath && currentPath !== '/admin/dashboard' && currentPath !== '/admin/profile') {
+      && !isPublicPath && !currentPath.startsWith('/admin/')) {
       navigate('/admin/dashboard');
     } else if ((user?.role === 'CLIENT' || user?.role === 'CLIENT_BUILDING_OWNER')
       && !isPublicPath && !currentPath.startsWith('/client/')) {
@@ -755,6 +1008,7 @@ function App() {
           phoneNumber: form.phoneNumber,
           password: form.password,
           confirmPassword: form.confirmPassword,
+          role: form.role,
         });
         setNotice('Your account has been created. You can now sign in.');
         setMode('login');
@@ -838,8 +1092,8 @@ function App() {
 
   const clientNavigation = [
     { section: 'PROJECTS', items: [
-      { label: 'Submit Project Request', path: '/client/submit-request', icon: '+' },
-      { label: 'My Project Requests', path: '/client/project-requests', icon: '▤' },
+      { label: 'Submit Project Request', path: '/client/project-request/new', icon: '+' },
+      { label: 'My Project Requests', path: '/client/requests', icon: '▤' },
       { label: 'My Projects', path: '/client/projects', icon: '⌂' },
       { label: 'Project Progress', path: '/client/progress', icon: '↗' },
     ] },
@@ -854,14 +1108,19 @@ function App() {
   const clientPageTitles = {
     '/client/dashboard': 'Profile',
     '/client/submit-request': 'Submit Project Request',
+    '/client/project-request/new': 'Submit Project Request',
     '/client/project-requests': 'My Project Requests',
+    '/client/requests': 'My Project Requests',
     '/client/projects': 'My Projects',
     '/client/progress': 'Project Progress',
     '/client/invoices': 'My Invoices',
     '/client/notifications': 'Notifications',
     '/client/profile': 'Profile',
   };
-  const clientPage = clientPageTitles[currentPath] ? currentPath : '/client/dashboard';
+
+  const isSubmitRequestPage = currentPath === '/client/submit-request' || currentPath === '/client/project-request/new';
+  const isRequestsListPage = currentPath === '/client/project-requests' || currentPath === '/client/requests';
+  const clientPage = clientPageTitles[currentPath] ? currentPath : (isSubmitRequestPage ? '/client/project-request/new' : (isRequestsListPage ? '/client/requests' : '/client/dashboard'));
 
   if ((user?.role === 'CLIENT' || user?.role === 'CLIENT_BUILDING_OWNER') && currentPath.startsWith('/client/')) {
     return (
@@ -891,22 +1150,32 @@ function App() {
             {clientNavigation.map((group) => (
               <div className="client-nav-group" key={group.section}>
                 <span className="client-nav-heading">{group.section}</span>
-                {group.items.map((item) => (
-                  <a
-                    href={item.path}
-                    key={item.path}
-                    className={`client-nav-link${clientPage === item.path ? ' active' : ''}`}
-                    aria-current={clientPage === item.path ? 'page' : undefined}
-                    onClick={(event) => {
-                      event.preventDefault();
-                      navigate(item.path);
-                      setClientNotice('');
-                    }}
-                  >
-                    <span className="client-nav-icon" aria-hidden="true">{item.icon}</span>
-                    {item.label}
-                  </a>
-                ))}
+                {group.items.map((item) => {
+                  const isActive = clientPage === item.path
+                    || (item.path === '/client/project-request/new' && isSubmitRequestPage)
+                    || (item.path === '/client/requests' && isRequestsListPage);
+                  return (
+                    <a
+                      href={item.path}
+                      key={item.path}
+                      className={`client-nav-link${isActive ? ' active' : ''}`}
+                      aria-current={isActive ? 'page' : undefined}
+                      onClick={(event) => {
+                        event.preventDefault();
+                        navigate(item.path);
+                        setClientNotice('');
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', flexGrow: 1, gap: '12px' }}>
+                        <span className="client-nav-icon" aria-hidden="true">{item.icon}</span>
+                        {item.label}
+                      </div>
+                      {item.label === 'Notifications' && (
+                        <span className="nav-badge">3</span>
+                      )}
+                    </a>
+                  );
+                })}
               </div>
             ))}
           </nav>
@@ -924,103 +1193,101 @@ function App() {
         </aside>
 
         <section className="client-content">
-          <header className="client-topbar">
-            <span>BuildPro <span className="breadcrumb-divider">/</span> {clientPageTitles[clientPage]}</span>
-            <span className="client-topbar-account">
-              <span className="client-online-dot" /> {user.fullName}
-            </span>
-            <button className="client-mobile-logout" type="button" onClick={handleLogout} disabled={busy}>
-              {busy ? 'Logging out…' : 'Logout'}
-            </button>
+          <header className="client-topbar-modern">
+            <div className="topbar-breadcrumb">
+              BuildPro <span className="breadcrumb-divider">{'>'}</span> {clientPageTitles[currentPath] || 'Workspace'}
+            </div>
+            
+            <div className="topbar-right">
+              <div className="topbar-search">
+                <span className="search-icon">🔍</span>
+                <input type="text" placeholder="Search projects, invoices..." />
+              </div>
+              
+              <div className="topbar-actions">
+                <div className="notification-bell-wrapper">
+                  <NotificationBell apiUrl={API_URL} getCsrfToken={getCsrfToken} onNavigate={navigate} />
+                </div>
+                
+                <div className="topbar-profile">
+                  <span className="topbar-avatar">{user.fullName.charAt(0).toUpperCase()}</span>
+                  <span className="topbar-name">{user.fullName}</span>
+                  <span className="topbar-chevron">▼</span>
+                </div>
+              </div>
+              
+              <button className="client-mobile-logout" type="button" onClick={handleLogout} disabled={busy}>
+                {busy ? 'Logging out…' : 'Logout'}
+              </button>
+            </div>
           </header>
 
           <div className="client-main">
-            {clientError && clientPage === '/client/project-requests' && <p className="dashboard-error" role="alert">{clientError}</p>}
             {clientNotice && <p className="client-success-message" role="status">{clientNotice}</p>}
 
             {(clientPage === '/client/dashboard' || clientPage === '/client/profile') && (
               <>
-                <div className="client-page-heading">
-                  <span className="eyebrow">ACCOUNT</span>
-                  <h1>My profile</h1>
-                  <p>Your account details.</p>
-                </div>
                 <AccountProfile user={user} />
               </>
             )}
 
-            {clientPage === '/client/submit-request' && (
+            {isSubmitRequestPage && (
               <>
                 <div className="client-page-heading">
                   <span className="eyebrow">PROJECTS</span>
-                  <h1>Submit Project Request</h1>
+                  <h1>{clientEditRequest ? 'Edit & Resubmit Request' : 'Submit Project Request'}</h1>
                   <p>Share a few details about your project so our team can get started.</p>
                 </div>
-                <form className="client-panel client-request-form" onSubmit={handleProjectRequestSubmit}>
-                  <label htmlFor="projectName">Project name</label>
-                  <input
-                    id="projectName"
-                    name="projectName"
-                    value={projectForm.projectName}
-                    onChange={(event) => setProjectForm((current) => ({ ...current, projectName: event.target.value }))}
-                    placeholder="e.g. New family home"
-                    maxLength={120}
-                    required
-                  />
-                  <label htmlFor="projectType">Project type</label>
-                  <select
-                    id="projectType"
-                    name="projectType"
-                    value={projectForm.projectType}
-                    onChange={(event) => setProjectForm((current) => ({ ...current, projectType: event.target.value }))}
-                    required
-                  >
-                    <option value="" disabled>Select project type</option>
-                    <option value="Residential">Residential construction</option>
-                    <option value="Commercial">Commercial construction</option>
-                    <option value="Renovation">Renovation</option>
-                    <option value="Other">Other</option>
-                  </select>
-                  <label htmlFor="projectLocation">Project location</label>
-                  <input
-                    id="projectLocation"
-                    name="location"
-                    value={projectForm.location}
-                    onChange={(event) => setProjectForm((current) => ({ ...current, location: event.target.value }))}
-                    placeholder="City, area, or address"
-                    maxLength={240}
-                    required
-                  />
-                  <label htmlFor="projectDescription">Project details</label>
-                  <textarea
-                    id="projectDescription"
-                    name="description"
-                    value={projectForm.description}
-                    onChange={(event) => setProjectForm((current) => ({ ...current, description: event.target.value }))}
-                    placeholder="Describe the project, your requirements, and any important details."
-                    maxLength={3000}
-                    rows={5}
-                    required
-                  />
-                  <button className="client-primary-button" type="submit" disabled={requestBusy}>
-                    {requestBusy ? 'Submitting…' : 'Submit project request'} {!requestBusy && <span aria-hidden="true">→</span>}
-                  </button>
-                </form>
+                <ClientProjectRequestForm
+                  apiUrl={API_URL}
+                  getCsrfToken={getCsrfToken}
+                  initialData={clientEditRequest}
+                  isEdit={Boolean(clientEditRequest)}
+                  onSubmitSuccess={(savedRequest, msg) => {
+                    setClientRequests((prev) => [savedRequest, ...prev.filter((r) => r.id !== savedRequest.id)]);
+                    setClientNotice(msg || 'Project request submitted successfully.');
+                    setClientEditRequest(null);
+                    navigate(currentPath === '/client/submit-request' ? '/client/project-requests' : '/client/requests');
+                  }}
+                />
               </>
             )}
 
-            {clientPage === '/client/project-requests' && (
-              <>
-                <div className="client-page-heading client-heading-with-action">
-                  <div><span className="eyebrow">PROJECTS</span><h1>My Project Requests</h1><p>Review the project requests you have submitted.</p></div>
-                  <button className="client-primary-button" type="button" onClick={() => navigate('/client/submit-request')}>New request <span aria-hidden="true">+</span></button>
-                </div>
-                <section className="client-panel">
-                  {clientLoading ? <p className="client-empty">Loading your requests…</p>
-                    : clientRequests.length === 0 ? <ClientEmptyState title="No project requests yet" text="When you submit a project request, it will appear here." />
-                      : <div className="client-request-list">{clientRequests.map((request) => <ClientRequestRow key={request.id} request={request} />)}</div>}
-                </section>
-              </>
+            {isRequestsListPage && (
+              <ClientRequestsList
+                requests={clientRequests}
+                loading={clientLoading}
+                error={clientError}
+                apiUrl={API_URL}
+                onNewRequest={() => {
+                  setClientEditRequest(null);
+                  navigate(currentPath === '/client/project-requests' ? '/client/submit-request' : '/client/project-request/new');
+                }}
+                onEditRequest={(req) => {
+                  setClientEditRequest(req);
+                  navigate(currentPath === '/client/project-requests' ? '/client/submit-request' : '/client/project-request/new');
+                }}
+                onDeleteRequest={async (id) => {
+                  try {
+                    const csrfToken = await getCsrfToken();
+                    const response = await fetch(`${API_URL}/api/client/requests/${id}`, {
+                      method: 'DELETE',
+                      credentials: 'include',
+                      headers: {
+                        'X-XSRF-TOKEN': csrfToken,
+                      },
+                    });
+                    if (!response.ok) {
+                      const errorData = await response.json().catch(() => ({}));
+                      throw new Error(errorData.detail || errorData.message || 'Failed to delete request.');
+                    }
+                    setClientRequests((prev) => prev.filter((r) => r.id !== id));
+                    setClientNotice('Project request deleted successfully.');
+                  } catch (err) {
+                    setClientError(err.message || 'An error occurred while deleting the request.');
+                  }
+                }}
+              />
             )}
 
             {clientPage === '/client/projects' && (
@@ -1033,13 +1300,7 @@ function App() {
               <ClientPlaceholder icon="＄" section="BILLING" title="My Invoices" text="Invoices for your construction projects will be listed here when they are issued." />
             )}
             {clientPage === '/client/notifications' && (
-              <ClientPlaceholder icon="♧" section="ACCOUNT" title="Notifications" text="Updates about your requests and projects will appear here." />
-            )}
-            {clientPage === '/client/profile' && (
-              <>
-                <div className="client-page-heading"><span className="eyebrow">ACCOUNT</span><h1>Profile</h1><p>Your account details.</p></div>
-                  <AccountProfile user={user} />
-              </>
+              <ClientNotifications apiUrl={API_URL} getCsrfToken={getCsrfToken} onNavigate={navigate} />
             )}
             <p className="dashboard-footer">BUILDPRO <span>·</span> CONSTRUCTION MANAGEMENT</p>
           </div>
@@ -1049,8 +1310,18 @@ function App() {
   }
 
   if ((user?.role === 'ADMIN' || user?.role === 'ADMIN_PROJECT_MANAGER')
-    && (currentPath === '/admin/dashboard' || currentPath === '/admin/profile')) {
+    && currentPath.startsWith('/admin/')) {
     const isAdminProfile = currentPath === '/admin/profile';
+    const isProjectRequests = currentPath === '/admin/project-requests';
+    const requestDetailsMatch = currentPath.match(/^\/admin\/project-requests\/(\d+)$/);
+    const projectDetailsMatch = currentPath.match(/^\/admin\/projects\/(\d+)$/);
+
+    let pageTitle = 'Overview';
+    if (isAdminProfile) pageTitle = 'My profile';
+    else if (isProjectRequests) pageTitle = 'Project Requests';
+    else if (requestDetailsMatch) pageTitle = `Request #${requestDetailsMatch[1]}`;
+    else if (projectDetailsMatch) pageTitle = `Project #${projectDetailsMatch[1]}`;
+
     return (
       <main className="admin-layout">
         <aside className="admin-sidebar">
@@ -1059,19 +1330,33 @@ function App() {
             <span>BuildPro</span>
           </a>
           <span className="sidebar-section-label">WORKSPACE</span>
-          <a className={`sidebar-link${!isAdminProfile ? ' active' : ''}`} href="/admin/dashboard" aria-current={!isAdminProfile ? 'page' : undefined} onClick={(event) => {
+          <a className={`sidebar-link${currentPath === '/admin/dashboard' ? ' active' : ''}`} href="/admin/dashboard" onClick={(event) => {
             event.preventDefault();
             navigate('/admin/dashboard');
           }}>
             <span aria-hidden="true">◫</span> Overview
           </a>
-          <a className={`sidebar-link${isAdminProfile ? ' active' : ''}`} href="/admin/profile" aria-current={isAdminProfile ? 'page' : undefined} onClick={(event) => {
+          <a className={`sidebar-link${isProjectRequests || requestDetailsMatch ? ' active' : ''}`} href="/admin/project-requests" onClick={(event) => {
+            event.preventDefault();
+            navigate('/admin/project-requests');
+          }}>
+            <span aria-hidden="true">📋</span> Project Requests
+          </a>
+          <a className={`sidebar-link${isAdminProfile ? ' active' : ''}`} href="/admin/profile" onClick={(event) => {
             event.preventDefault();
             navigate('/admin/profile');
           }}>
             <span aria-hidden="true">◉</span> My profile
           </a>
-          <a className="sidebar-link" href="#team">
+          <a className="sidebar-link" href="/admin/dashboard#team" onClick={(event) => {
+            if (currentPath !== '/admin/dashboard') {
+              event.preventDefault();
+              navigate('/admin/dashboard');
+              setTimeout(() => {
+                document.getElementById('team')?.scrollIntoView();
+              }, 100);
+            }
+          }}>
             <span aria-hidden="true">♧</span> Team accounts
             <span className="sidebar-count">{adminUsers.length}</span>
           </a>
@@ -1088,12 +1373,15 @@ function App() {
 
         <section className="admin-content" id="overview">
           <header className="admin-topbar">
-            <span>Workspace <span className="breadcrumb-divider">/</span> {isAdminProfile ? 'My profile' : 'Overview'}</span>
-            <span className="admin-online"><span /> Admin account</span>
+            <span>Workspace <span className="breadcrumb-divider">/</span> {pageTitle}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+              <NotificationBell apiUrl={API_URL} getCsrfToken={getCsrfToken} onNavigate={navigate} />
+              <span className="admin-online"><span /> Admin account</span>
+            </div>
           </header>
 
           <div className="admin-main">
-            {isAdminProfile ? (
+            {isAdminProfile && (
               <>
                 <div className="dashboard-heading">
                   <div><span className="eyebrow">ACCOUNT</span><h1>My profile</h1><p>Your details for the account currently signed in.</p></div>
@@ -1101,82 +1389,112 @@ function App() {
                 </div>
                 <AccountProfile user={user} className="client-panel client-profile-panel admin-profile-panel" />
               </>
-            ) : (
+            )}
+
+            {isProjectRequests && (
+              <AdminProjectRequestsList
+                apiUrl={API_URL}
+                getCsrfToken={getCsrfToken}
+                onViewDetails={(id) => navigate(`/admin/project-requests/${id}`)}
+                onProjectCreated={(id) => navigate(`/admin/projects/${id}`)}
+              />
+            )}
+
+            {requestDetailsMatch && (
+              <AdminProjectRequestDetails
+                requestId={requestDetailsMatch[1]}
+                apiUrl={API_URL}
+                getCsrfToken={getCsrfToken}
+                onBack={() => navigate('/admin/project-requests')}
+                onProjectCreated={(id) => navigate(`/admin/projects/${id}`)}
+              />
+            )}
+
+            {projectDetailsMatch && (
+              <AdminProjectDetails
+                projectId={projectDetailsMatch[1]}
+                apiUrl={API_URL}
+                onBack={() => navigate('/admin/project-requests')}
+                onViewRequest={(id) => navigate(`/admin/project-requests/${id}`)}
+              />
+            )}
+
+            {currentPath === '/admin/dashboard' && (
               <>
-            <div className="dashboard-heading">
-              <div>
-                <span className="eyebrow">ADMINISTRATION</span>
-                <h1>Welcome, {user.fullName}.</h1>
-                <p>Manage your workspace and keep track of registered team accounts.</p>
-              </div>
-              <div className="dashboard-date">
-                <span>YOUR ROLE</span>
-                <strong>Administrator</strong>
-              </div>
-            </div>
-
-            {dashboardError && <p className="dashboard-error" role="alert">{dashboardError}</p>}
-
-            <div className="dashboard-stats">
-              <article className="stat-card">
-                <span className="stat-icon members" aria-hidden="true">♧</span>
-                <span className="stat-label">REGISTERED ACCOUNTS</span>
-                <strong>{dashboardLoading ? '—' : adminUsers.length}</strong>
-                <span className="stat-caption">Accounts in your workspace</span>
-              </article>
-              <article className="stat-card">
-                <span className="stat-icon admin-icon" aria-hidden="true">✓</span>
-                <span className="stat-label">ADMIN STATUS</span>
-                <strong>Active</strong>
-                <span className="stat-caption">Administrator access confirmed</span>
-              </article>
-              <article className="stat-card">
-                <span className="stat-icon email-icon" aria-hidden="true">@</span>
-                <span className="stat-label">SIGNED IN AS</span>
-                <strong className="stat-email">{user.email}</strong>
-                <span className="stat-caption">Your administrator account</span>
-              </article>
-            </div>
-
-            <section className="team-card" id="team">
-              <div className="team-card-heading">
-                <div>
-                  <span className="eyebrow">WORKSPACE DIRECTORY</span>
-                  <h2>Team accounts</h2>
-                  <p>Accounts registered in the construction management workspace.</p>
+                <div className="dashboard-heading">
+                  <div>
+                    <span className="eyebrow">ADMINISTRATION</span>
+                    <h1>Welcome, {user.fullName}.</h1>
+                    <p>Manage your workspace and keep track of registered team accounts.</p>
+                  </div>
+                  <div className="dashboard-date">
+                    <span>YOUR ROLE</span>
+                    <strong>Administrator</strong>
+                  </div>
                 </div>
-                <span className="team-total">{dashboardLoading ? 'Loading…' : `${adminUsers.length} accounts`}</span>
-              </div>
 
-              {dashboardLoading ? (
-                <p className="team-message">Loading team accounts…</p>
-              ) : dashboardError ? (
-                <p className="team-message">Team accounts could not be loaded.</p>
-              ) : adminUsers.length === 0 ? (
-                <p className="team-message">There are no registered accounts yet.</p>
-              ) : (
-                <div className="team-table-wrap">
-                  <table className="team-table">
-                    <thead>
-                      <tr><th>NAME</th><th>EMAIL</th><th>PHONE</th><th>ROLE</th></tr>
-                    </thead>
-                    <tbody>
-                      {adminUsers.map((account) => (
-                        <tr key={account.id}>
-                          <td><span className="table-avatar">{account.fullName.charAt(0).toUpperCase()}</span>{account.fullName}</td>
-                          <td>{account.email}</td>
-                          <td>{account.phoneNumber}</td>
-                          <td><span className={`role-badge${account.role === 'ADMIN' || account.role === 'ADMIN_PROJECT_MANAGER' ? ' role-admin' : ''}`}>
-                            {roles.find((role) => role.value === account.role)?.label
-                              || (account.role === 'CLIENT_BUILDING_OWNER' ? 'Client / Building Owner' : account.role)}
-                          </span></td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                {dashboardError && <p className="dashboard-error" role="alert">{dashboardError}</p>}
+
+                <div className="dashboard-stats">
+                  <article className="stat-card">
+                    <span className="stat-icon members" aria-hidden="true">♧</span>
+                    <span className="stat-label">REGISTERED ACCOUNTS</span>
+                    <strong>{dashboardLoading ? '—' : adminUsers.length}</strong>
+                    <span className="stat-caption">Accounts in your workspace</span>
+                  </article>
+                  <article className="stat-card">
+                    <span className="stat-icon admin-icon" aria-hidden="true">✓</span>
+                    <span className="stat-label">ADMIN STATUS</span>
+                    <strong>Active</strong>
+                    <span className="stat-caption">Administrator access confirmed</span>
+                  </article>
+                  <article className="stat-card">
+                    <span className="stat-icon email-icon" aria-hidden="true">@</span>
+                    <span className="stat-label">SIGNED IN AS</span>
+                    <strong className="stat-email">{user.email}</strong>
+                    <span className="stat-caption">Your administrator account</span>
+                  </article>
                 </div>
-              )}
-            </section>
+
+                <section className="team-card" id="team">
+                  <div className="team-card-heading">
+                    <div>
+                      <span className="eyebrow">WORKSPACE DIRECTORY</span>
+                      <h2>Team accounts</h2>
+                      <p>Accounts registered in the construction management workspace.</p>
+                    </div>
+                    <span className="team-total">{dashboardLoading ? 'Loading…' : `${adminUsers.length} accounts`}</span>
+                  </div>
+
+                  {dashboardLoading ? (
+                    <p className="team-message">Loading team accounts…</p>
+                  ) : dashboardError ? (
+                    <p className="team-message">Team accounts could not be loaded.</p>
+                  ) : adminUsers.length === 0 ? (
+                    <p className="team-message">There are no registered accounts yet.</p>
+                  ) : (
+                    <div className="team-table-wrap">
+                      <table className="team-table">
+                        <thead>
+                          <tr><th>NAME</th><th>EMAIL</th><th>PHONE</th><th>ROLE</th></tr>
+                        </thead>
+                        <tbody>
+                          {adminUsers.map((account) => (
+                            <tr key={account.id}>
+                              <td><span className="table-avatar">{account.fullName.charAt(0).toUpperCase()}</span>{account.fullName}</td>
+                              <td>{account.email}</td>
+                              <td>{account.phoneNumber}</td>
+                              <td><span className={`role-badge${account.role === 'ADMIN' || account.role === 'ADMIN_PROJECT_MANAGER' ? ' role-admin' : ''}`}>
+                                {roles.find((role) => role.value === account.role)?.label
+                                  || (account.role === 'CLIENT_BUILDING_OWNER' ? 'Client / Building Owner' : account.role)}
+                              </span></td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </section>
               </>
             )}
             <p className="dashboard-footer">BUILDPRO <span>·</span> CONSTRUCTION MANAGEMENT</p>
@@ -1234,6 +1552,115 @@ function App() {
     );
   }
 
+  if (user?.role === 'SITE_ENGINEER' && currentPath.startsWith('/engineer/')) {
+    const isEngineerProfile = currentPath === '/engineer/profile';
+    const isEngineerProjectRequests = currentPath === '/engineer/project-requests';
+    const engineerRequestDetailsMatch = currentPath.match(/^\/engineer\/project-requests\/(\d+)$/);
+
+    let pageTitle = 'Dashboard';
+    if (isEngineerProfile) pageTitle = 'My profile';
+    else if (isEngineerProjectRequests) pageTitle = 'Project Requests';
+    else if (engineerRequestDetailsMatch) pageTitle = `Request #${engineerRequestDetailsMatch[1]}`;
+
+    return (
+      <main className="client-layout admin-layout">
+        <aside className="admin-sidebar client-sidebar">
+          <a className="client-brand" href="/engineer/dashboard" onClick={(e) => { e.preventDefault(); navigate('/engineer/dashboard'); }}>
+            <span className="brand-mark">B</span>
+            <span>BuildPro</span>
+          </a>
+          <nav className="client-navigation">
+            <a href="/engineer/dashboard" className={`client-nav-link${currentPath === '/engineer/dashboard' ? ' active' : ''}`} onClick={(e) => { e.preventDefault(); navigate('/engineer/dashboard'); }}>
+              <span className="client-nav-icon">▦</span> Dashboard
+            </a>
+            <div className="client-nav-group">
+              <span className="client-nav-heading">TASKS</span>
+              <a href="/engineer/project-requests" className={`client-nav-link${isEngineerProjectRequests || engineerRequestDetailsMatch ? ' active' : ''}`} onClick={(e) => { e.preventDefault(); navigate('/engineer/project-requests'); }}>
+                <span className="client-nav-icon">▤</span> Project Requests
+              </a>
+            </div>
+            <div className="client-nav-group">
+              <span className="client-nav-heading">ACCOUNT</span>
+              <a href="/engineer/profile" className={`client-nav-link${isEngineerProfile ? ' active' : ''}`} onClick={(e) => { e.preventDefault(); navigate('/engineer/profile'); }}>
+                <span className="client-nav-icon">◉</span> Profile
+              </a>
+            </div>
+          </nav>
+          <div className="client-sidebar-bottom">
+            <div className="client-profile-summary">
+              <span className="client-avatar">{user.fullName.charAt(0).toUpperCase()}</span>
+              <span><strong>{user.fullName}</strong><small>Site Engineer</small></span>
+            </div>
+            <button className="client-logout" type="button" onClick={handleLogout} disabled={busy}>
+              <span className="client-nav-icon">↪</span>
+              {busy ? 'Logging out…' : 'Logout'}
+            </button>
+          </div>
+        </aside>
+        <section className="client-content admin-content">
+          <header className="client-topbar admin-topbar">
+            <span>Workspace <span className="breadcrumb-divider">/</span> {pageTitle}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+              <NotificationBell apiUrl={API_URL} getCsrfToken={getCsrfToken} onNavigate={navigate} />
+              <span className="admin-online"><span /> Engineer account</span>
+            </div>
+          </header>
+          <div className="client-main admin-main">
+            {isEngineerProfile && (
+              <>
+                <div className="dashboard-heading">
+                  <div><span className="eyebrow">ACCOUNT</span><h1>My profile</h1><p>Your details for the account currently signed in.</p></div>
+                  <div className="dashboard-date"><span>YOUR ROLE</span><strong>Site Engineer</strong></div>
+                </div>
+                <AccountProfile user={user} className="client-panel client-profile-panel admin-profile-panel" />
+              </>
+            )}
+
+            {isEngineerProjectRequests && (
+              <EngineerProjectRequestsList
+                apiUrl={API_URL}
+                getCsrfToken={getCsrfToken}
+                onViewDetails={(id) => navigate(`/engineer/project-requests/${id}`)}
+              />
+            )}
+
+            {engineerRequestDetailsMatch && (
+              <EngineerProjectRequestDetails
+                requestId={engineerRequestDetailsMatch[1]}
+                apiUrl={API_URL}
+                getCsrfToken={getCsrfToken}
+                onBack={() => navigate('/engineer/project-requests')}
+              />
+            )}
+
+            {currentPath === '/engineer/dashboard' && (
+              <>
+                <div className="dashboard-heading">
+                  <div>
+                    <span className="eyebrow">WORKSPACE</span>
+                    <h1>Welcome, {user.fullName}.</h1>
+                    <p>Manage your assigned tasks and technical reviews.</p>
+                  </div>
+                </div>
+                <div className="dashboard-stats">
+                  <article className="stat-card" onClick={() => navigate('/engineer/project-requests')} style={{ cursor: 'pointer' }}>
+                    <span className="stat-icon members">▤</span>
+                    <span className="stat-label">ASSIGNED REQUESTS</span>
+                    <strong>View</strong>
+                    <span className="stat-caption">Technical assessments needed</span>
+                  </article>
+                </div>
+              </>
+            )}
+            
+            <p className="dashboard-footer">BUILDPRO <span>·</span> CONSTRUCTION MANAGEMENT</p>
+          </div>
+        </section>
+      </main>
+    );
+  }
+
+
   if (currentPath === '/' || currentPath.startsWith('/about') || (!user && currentPath !== '/login' && currentPath !== '/signup')) {
     return (
       <LandingPage
@@ -1259,6 +1686,8 @@ function App() {
             navigate('/admin/dashboard');
           } else if (user.role === 'CLIENT' || user.role === 'CLIENT_BUILDING_OWNER') {
             navigate('/client/dashboard');
+          } else if (user.role === 'SITE_ENGINEER') {
+            navigate('/engineer/dashboard');
           } else {
             navigate('/workspace/dashboard');
           }
@@ -1388,23 +1817,8 @@ function App() {
                   required
                 />
 
-                {isSignup ? (
                   <>
-                    <label htmlFor="accountType">Account type</label>
-                    <select
-                      id="accountType"
-                      name="accountType"
-                      value="CLIENT"
-                      onChange={() => {}}
-                      required
-                    >
-                      <option value="CLIENT">Client / Building Owner</option>
-                    </select>
-                    <span className="field-hint">Public registration creates a client account.</span>
-                  </>
-                ) : (
-                  <>
-                    <label htmlFor="role">Login As</label>
+                    <label htmlFor="role">Account type</label>
                     <select id="role" name="role" value={form.role} onChange={updateField} required>
                       <option value="" disabled>Select your role</option>
                       {roles.map((role) => (
@@ -1412,7 +1826,6 @@ function App() {
                       ))}
                     </select>
                   </>
-                )}
 
                 <label htmlFor="password">Password</label>
                 <input

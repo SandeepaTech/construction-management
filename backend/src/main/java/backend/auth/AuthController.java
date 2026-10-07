@@ -39,13 +39,18 @@ public class AuthController {
 	@PostMapping("/login")
 	public AuthResponse login(@Valid @RequestBody AuthRequests.Login request, HttpServletRequest httpRequest) {
 		Authentication authentication = authService.authenticate(request);
-		httpRequest.getSession(true);
-		httpRequest.changeSessionId();
+		// Invalidate any existing session to avoid session fixation
+		HttpSession existingSession = httpRequest.getSession(false);
+		if (existingSession != null) {
+			existingSession.invalidate();
+		}
+		// Set authentication in security context
 		SecurityContext context = SecurityContextHolder.createEmptyContext();
 		context.setAuthentication(authentication);
 		SecurityContextHolder.setContext(context);
-		HttpSession session = httpRequest.getSession(true);
-		session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, context);
+		// Create a new session and store the security context
+		HttpSession newSession = httpRequest.getSession(true);
+		newSession.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, context);
 		return authService.currentUser(authentication.getName());
 	}
 

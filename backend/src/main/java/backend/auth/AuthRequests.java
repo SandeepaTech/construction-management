@@ -14,7 +14,8 @@ public final class AuthRequests {
 			@NotBlank @Email @Size(max = 254) String email,
 			@NotBlank @Pattern(regexp = "^[+()0-9 .-]{7,30}$") String phoneNumber,
 			@NotBlank @Size(min = 8, max = 72) String password,
-			@NotBlank String confirmPassword) {
+			@NotBlank String confirmPassword,
+			UserRole role) {
 	}
 
 	public record Login(

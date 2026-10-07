@@ -40,12 +40,14 @@ public class AuthService {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Passwords do not match.");
 		}
 
+		UserRole assignedRole = request.role() != null ? request.role() : UserRole.CLIENT;
+
 		AppUser user = new AppUser(
 				request.fullName().trim(),
 				email,
 				request.phoneNumber().trim(),
 				passwordEncoder.encode(request.password()),
-				UserRole.CLIENT);
+				assignedRole);
 		try {
 			return AuthResponse.from(users.save(user));
 		} catch (DataIntegrityViolationException exception) {
