@@ -1,0 +1,222 @@
+/* NEW DESIGN OVERRIDES FOR ADMIN REQUESTS */
+.admin-requests-stats {
+  display: flex;
+  gap: 16px;
+  margin-top: 10px;
+}
+
+.stat-box {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #eaedf1;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.stat-box-icon {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  font-size: 20px;
+}
+
+.stat-box-icon.blue { background: #eef5ff; color: #3b82f6; }
+.stat-box-icon.orange { background: #fff7ed; color: #f97316; }
+.stat-box-icon.indigo { background: #eef2ff; color: #6366f1; }
+.stat-box-icon.green { background: #f0fdf4; color: #22c55e; }
+
+.stat-box-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-box-content span {
+  font-size: 13px;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.stat-box-content strong {
+  font-size: 24px;
+  color: #0f172a;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.stat-box-content small {
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+/* Updated Table Styling */
+.custom-admin-table th {
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 16px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.custom-admin-table td {
+  padding: 16px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #334155;
+  font-size: 13px;
+  vertical-align: middle;
+}
+
+.table-client-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.table-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 700;
+}
+.table-avatar.color-0 { background: #e0e7ff; color: #4338ca; }
+.table-avatar.color-1 { background: #dcfce7; color: #15803d; }
+.table-avatar.color-2 { background: #fee2e2; color: #b91c1c; }
+.table-avatar.color-3 { background: #dbeafe; color: #1d4ed8; }
+
+.icon-text {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #475569;
+}
+
+.btn-action-view-new {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #ffffff;
+  border: 1px solid #bfdbfe;
+  color: #2563eb;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-action-view-new:hover {
+  background: #eff6ff;
+  border-color: #93c5fd;
+}
+
+.table-actions-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.action-menu-container {
+  position: relative;
+}
+
+.btn-action-more {
+  background: transparent;
+  border: none;
+  font-size: 18px;
+  color: #64748b;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.btn-action-more:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.action-menu-dropdown {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: 100%;
+  background: white;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border-radius: 8px;
+  padding: 8px;
+  z-index: 10;
+  min-width: 160px;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.action-menu-container:hover .action-menu-dropdown {
+  display: flex;
+}
+
+.action-menu-dropdown button {
+  width: 100%;
+  text-align: left;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.action-menu-dropdown button:hover {
+  background: #f1f5f9;
+}
+
+/* Pagination container at bottom */
+.admin-pagination-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.admin-pagination-bar span {
+  font-size: 13px;
+  color: #64748b;
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pagination-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: white;
+  color: #64748b;
+  cursor: pointer;
+}
+
+.pagination-btn.active {
+  background: #2563eb;
+  color: white;
+  border-color: #2563eb;
+}

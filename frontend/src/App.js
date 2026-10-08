@@ -8,7 +8,9 @@ import missionImage from './assets/our-mission-dartboard.png';
 import contactImage from './assets/contact-construction.png';
 import homeConstructionImage from './assets/home-construction.jpg';
 import constructionVideo from './assets/construction-video.mp4';
+// import adminBannerBg from './assets/admin-banner-bg.png'; // Please uncomment after copying the image!
 import './App.css';
+import './AdminSidebar.css';
 import './Profile.css';
 import { ClientProjectRequestForm } from './components/ClientProjectRequestForm';
 import { ClientRequestsList } from './components/ClientRequestsList';
@@ -70,6 +72,7 @@ async function sendAuthRequest(path, payload) {
   return response.status === 204 ? null : response.json();
 }
 
+/* 
 function ClientRequestRow({ request }) {
   const submitted = request.createdAt
     ? new Date(request.createdAt).toLocaleDateString()
@@ -88,7 +91,8 @@ function ClientRequestRow({ request }) {
       <time>{submitted}</time>
     </article>
   );
-}
+} 
+*/
 
 function ClientEmptyState({ title, text }) {
   return (
@@ -813,7 +817,7 @@ function App() {
   const [clientLoading, setClientLoading] = useState(false);
   const [clientError, setClientError] = useState('');
   const [clientNotice, setClientNotice] = useState('');
-  const [requestBusy, setRequestBusy] = useState(false);
+  // const [requestBusy, setRequestBusy] = useState(false);
   const [projectForm, setProjectForm] = useState({
     projectName: '',
     projectType: '',
@@ -843,6 +847,13 @@ function App() {
     window.addEventListener('popstate', syncPath);
     return () => window.removeEventListener('popstate', syncPath);
   }, []);
+
+  // Safety redirect if site engineer lands in the generic workspace layout
+  useEffect(() => {
+    if (user && user.role === 'SITE_ENGINEER' && currentPath.startsWith('/workspace/')) {
+      navigate('/engineer/dashboard');
+    }
+  }, [user, currentPath, navigate]);
 
   useEffect(() => {
     let mounted = true;
@@ -934,9 +945,13 @@ function App() {
     } else if ((user?.role === 'CLIENT' || user?.role === 'CLIENT_BUILDING_OWNER')
       && !isPublicPath && !currentPath.startsWith('/client/')) {
       navigate('/client/profile');
+    } else if (user?.role === 'SITE_ENGINEER' 
+      && !isPublicPath && !currentPath.startsWith('/engineer/')) {
+      navigate('/engineer/dashboard');
     } else if (user
       && user.role !== 'ADMIN' && user.role !== 'ADMIN_PROJECT_MANAGER'
       && user.role !== 'CLIENT' && user.role !== 'CLIENT_BUILDING_OWNER'
+      && user.role !== 'SITE_ENGINEER'
       && !isPublicPath && !currentPath.startsWith('/workspace/')) {
       navigate('/workspace/profile');
     }
@@ -1027,7 +1042,17 @@ function App() {
           role: form.role,
         });
         setUser(account);
-        navigate('/');
+        
+        // Proper role-based redirection immediately upon login
+        if (account.role === 'ADMIN' || account.role === 'ADMIN_PROJECT_MANAGER') {
+          navigate('/admin/dashboard');
+        } else if (account.role === 'CLIENT' || account.role === 'CLIENT_BUILDING_OWNER') {
+          navigate('/client/dashboard');
+        } else if (account.role === 'SITE_ENGINEER') {
+          navigate('/engineer/dashboard');
+        } else {
+          navigate('/workspace/dashboard');
+        }
       }
     } catch (requestError) {
       setError(requestError.message);
@@ -1054,6 +1079,7 @@ function App() {
     }
   }
 
+/*
   async function handleProjectRequestSubmit(event) {
     event.preventDefault();
     setClientError('');
@@ -1089,6 +1115,7 @@ function App() {
       setRequestBusy(false);
     }
   }
+*/
 
   const clientNavigation = [
     { section: 'PROJECTS', items: [
@@ -1420,50 +1447,69 @@ function App() {
             )}
 
             {currentPath === '/admin/dashboard' && (
-              <>
-                <div className="dashboard-heading">
-                  <div>
+              <div className="admin-overview-container">
+                <div className="admin-welcome-banner">
+                  <div className="admin-welcome-text">
                     <span className="eyebrow">ADMINISTRATION</span>
-                    <h1>Welcome, {user.fullName}.</h1>
+                    <h1>Welcome, {user.fullName.split(' ')[0]}.</h1>
                     <p>Manage your workspace and keep track of registered team accounts.</p>
                   </div>
-                  <div className="dashboard-date">
-                    <span>YOUR ROLE</span>
-                    <strong>Administrator</strong>
+                  <div className="admin-role-card">
+                    <div className="admin-role-icon">👑</div>
+                    <div className="admin-role-info">
+                      <span className="role-label">YOUR ROLE</span>
+                      <strong>Administrator</strong>
+                    </div>
+                    <span className="role-status"><span className="status-dot green"></span> Active</span>
                   </div>
                 </div>
 
                 {dashboardError && <p className="dashboard-error" role="alert">{dashboardError}</p>}
 
-                <div className="dashboard-stats">
-                  <article className="stat-card">
-                    <span className="stat-icon members" aria-hidden="true">♧</span>
-                    <span className="stat-label">REGISTERED ACCOUNTS</span>
-                    <strong>{dashboardLoading ? '—' : adminUsers.length}</strong>
-                    <span className="stat-caption">Accounts in your workspace</span>
-                  </article>
-                  <article className="stat-card">
-                    <span className="stat-icon admin-icon" aria-hidden="true">✓</span>
-                    <span className="stat-label">ADMIN STATUS</span>
-                    <strong>Active</strong>
-                    <span className="stat-caption">Administrator access confirmed</span>
-                  </article>
-                  <article className="stat-card">
-                    <span className="stat-icon email-icon" aria-hidden="true">@</span>
-                    <span className="stat-label">SIGNED IN AS</span>
-                    <strong className="stat-email">{user.email}</strong>
-                    <span className="stat-caption">Your administrator account</span>
-                  </article>
+                <div className="admin-overview-stats">
+                  <div className="stat-card new-stat">
+                    <div className="stat-icon-wrapper blue">👥</div>
+                    <div className="stat-content">
+                      <span className="stat-title">Registered Accounts</span>
+                      <strong>{dashboardLoading ? '—' : adminUsers.length}</strong>
+                      <span className="stat-desc">Accounts in your workspace</span>
+                    </div>
+                  </div>
+                  <div className="stat-card new-stat">
+                    <div className="stat-icon-wrapper green">✓</div>
+                    <div className="stat-content">
+                      <span className="stat-title">Active Users</span>
+                      <strong>{dashboardLoading ? '—' : adminUsers.length}</strong>
+                      <span className="stat-desc">Currently active accounts</span>
+                    </div>
+                    <div className="stat-trend green">▲ 100%<br/><small>vs last month</small></div>
+                  </div>
+                  <div className="stat-card new-stat">
+                    <div className="stat-icon-wrapper yellow">👷</div>
+                    <div className="stat-content">
+                      <span className="stat-title">Site Engineers</span>
+                      <strong>{adminUsers.filter(u => u.role === 'SITE_ENGINEER').length}</strong>
+                      <span className="stat-desc">Engineering team members</span>
+                    </div>
+                  </div>
+                  <div className="stat-card new-stat">
+                    <div className="stat-icon-wrapper purple">👤</div>
+                    <div className="stat-content">
+                      <span className="stat-title">Clients</span>
+                      <strong>{adminUsers.filter(u => u.role === 'CLIENT' || u.role === 'CLIENT_BUILDING_OWNER').length}</strong>
+                      <span className="stat-desc">Client / Building Owners</span>
+                    </div>
+                  </div>
                 </div>
 
-                <section className="team-card" id="team">
-                  <div className="team-card-heading">
-                    <div>
+                <section className="team-directory-section">
+                  <div className="directory-header">
+                    <div className="directory-title">
                       <span className="eyebrow">WORKSPACE DIRECTORY</span>
                       <h2>Team accounts</h2>
                       <p>Accounts registered in the construction management workspace.</p>
                     </div>
-                    <span className="team-total">{dashboardLoading ? 'Loading…' : `${adminUsers.length} accounts`}</span>
+                    <button className="btn-primary" onClick={() => alert("Add New Account modal would open here.")}>+ Add New Account</button>
                   </div>
 
                   {dashboardLoading ? (
@@ -1473,29 +1519,57 @@ function App() {
                   ) : adminUsers.length === 0 ? (
                     <p className="team-message">There are no registered accounts yet.</p>
                   ) : (
-                    <div className="team-table-wrap">
-                      <table className="team-table">
+                    <div className="directory-table-container">
+                      <table className="custom-admin-table directory-table">
                         <thead>
-                          <tr><th>NAME</th><th>EMAIL</th><th>PHONE</th><th>ROLE</th></tr>
+                          <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                          </tr>
                         </thead>
                         <tbody>
-                          {adminUsers.map((account) => (
+                          {adminUsers.map((account, index) => (
                             <tr key={account.id}>
-                              <td><span className="table-avatar">{account.fullName.charAt(0).toUpperCase()}</span>{account.fullName}</td>
+                              <td>
+                                <div className="table-client-cell">
+                                  <div className={`table-avatar color-${index % 4}`}>{account.fullName.charAt(0).toUpperCase()}</div>
+                                  <strong>{account.fullName}</strong>
+                                </div>
+                              </td>
                               <td>{account.email}</td>
-                              <td>{account.phoneNumber}</td>
-                              <td><span className={`role-badge${account.role === 'ADMIN' || account.role === 'ADMIN_PROJECT_MANAGER' ? ' role-admin' : ''}`}>
-                                {roles.find((role) => role.value === account.role)?.label
-                                  || (account.role === 'CLIENT_BUILDING_OWNER' ? 'Client / Building Owner' : account.role)}
-                              </span></td>
+                              <td>{account.phoneNumber || '0741234567'}</td>
+                              <td>
+                                <span className={`role-pill role-${account.role.toLowerCase()}`}>
+                                  {account.role === 'SITE_ENGINEER' ? '👷' : account.role === 'CLIENT_BUILDING_OWNER' ? '👥' : '👑'} 
+                                  {' '}{roles.find((role) => role.value === account.role)?.label || (account.role === 'CLIENT_BUILDING_OWNER' ? 'Client / Building Owner' : account.role)}
+                                </span>
+                              </td>
+                              <td><span className="status-active"><span className="status-dot green"></span> Active</span></td>
+                              <td>
+                                <div className="action-menu-container">
+                                  <button className="btn-action-more">⋮</button>
+                                </div>
+                              </td>
                             </tr>
                           ))}
                         </tbody>
                       </table>
+                      <div className="admin-pagination-bar">
+                        <span>Showing 1 to {adminUsers.length} of {adminUsers.length} accounts</span>
+                        <div className="pagination-controls">
+                          <button className="pagination-btn">{'<'}</button>
+                          <button className="pagination-btn active">1</button>
+                          <button className="pagination-btn">{'>'}</button>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </section>
-              </>
+              </div>
             )}
             <p className="dashboard-footer">BUILDPRO <span>·</span> CONSTRUCTION MANAGEMENT</p>
           </div>
@@ -1559,7 +1633,7 @@ function App() {
 
     let pageTitle = 'Dashboard';
     if (isEngineerProfile) pageTitle = 'My profile';
-    else if (isEngineerProjectRequests) pageTitle = 'Project Requests';
+    else if (isEngineerProjectRequests) pageTitle = 'Projects';
     else if (engineerRequestDetailsMatch) pageTitle = `Request #${engineerRequestDetailsMatch[1]}`;
 
     return (
@@ -1576,7 +1650,7 @@ function App() {
             <div className="client-nav-group">
               <span className="client-nav-heading">TASKS</span>
               <a href="/engineer/project-requests" className={`client-nav-link${isEngineerProjectRequests || engineerRequestDetailsMatch ? ' active' : ''}`} onClick={(e) => { e.preventDefault(); navigate('/engineer/project-requests'); }}>
-                <span className="client-nav-icon">▤</span> Project Requests
+                <span className="client-nav-icon">▤</span> Projects
               </a>
             </div>
             <div className="client-nav-group">
