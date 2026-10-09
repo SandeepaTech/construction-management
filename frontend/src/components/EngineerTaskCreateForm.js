@@ -124,12 +124,11 @@ export function EngineerTaskCreateForm({ projectId, apiUrl, getCsrfToken, onCanc
   const selectedWorkers = workers.filter(w => form.assignedWorkerIds.includes(w.id.toString()));
 
   return (
-    <div className="client-panel" style={{ padding: '32px', marginBottom: '24px' }}>
-      <h3 style={{ margin: '0 0 24px 0', fontSize: '20px' }}>Create New Task</h3>
+    <div className="project-request-form-container" style={{ marginBottom: '40px' }}>
       
       {error && <div className="form-error-banner" style={{ marginBottom: '24px' }}>{error}</div>}
 
-      <form onSubmit={handleSubmit} className="client-request-form">
+      <form onSubmit={handleSubmit} className="sectioned-request-form">
         <div className="form-section-card">
           <div className="section-card-header">
             <span className="section-badge">1</span>
@@ -231,10 +230,10 @@ export function EngineerTaskCreateForm({ projectId, apiUrl, getCsrfToken, onCanc
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '16px', marginTop: '32px' }}>
-          <button type="button" className="secondary-button" onClick={onCancel} disabled={busy}>Cancel</button>
-          <button type="submit" className="primary-button" disabled={busy || form.assignedWorkerIds.length === 0 || !form.leadWorkerId}>
-            {busy ? 'Creating Task...' : 'Create Task'}
+        <div className="form-actions-bar" style={{ display: 'flex', gap: '16px', marginTop: '16px', justifyContent: 'flex-end', alignItems: 'center' }}>
+          <button type="button" onClick={onCancel} disabled={busy} style={{ background: 'transparent', border: '1px solid #cbd5e1', padding: '14px 28px', borderRadius: '8px', color: '#475569', fontWeight: '600', cursor: busy ? 'not-allowed' : 'pointer' }}>Cancel</button>
+          <button type="submit" className="client-primary-button submit-btn-large" disabled={busy || form.assignedWorkerIds.length === 0 || !form.leadWorkerId}>
+            {busy ? 'Creating Task...' : 'Create Task →'}
           </button>
         </div>
       </form>
