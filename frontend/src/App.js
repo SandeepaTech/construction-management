@@ -25,6 +25,8 @@ import { ClientProjectsList } from './components/ClientProjectsList';
 import { ClientProjectDetails } from './components/ClientProjectDetails';
 import { EngineerProjectsList } from './components/EngineerProjectsList';
 import { EngineerProjectDetails } from './components/EngineerProjectDetails';
+import { WorkerTasksList } from './components/WorkerTasksList';
+import { WorkerTaskDetails } from './components/WorkerTaskDetails';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
 const heroImages = [hotelImage, homeImage, infrastructureImage];
@@ -1793,8 +1795,115 @@ function App() {
         </section>
       </main>
     );
+    );
   }
 
+  if (user && user.role === 'FIELD_WORKER' && currentPath.startsWith('/worker')) {
+    const isWorkerTasks = currentPath === '/worker/tasks';
+    const workerTaskDetailsMatch = currentPath.match(/^\/worker\/tasks\/(\d+)$/);
+    const isWorkerProfile = currentPath === '/worker/profile';
+    const isWorkerDashboard = currentPath === '/worker/dashboard' || currentPath === '/worker';
+
+    if (currentPath === '/worker') {
+      window.history.replaceState(null, '', '/worker/dashboard');
+    }
+
+    return (
+      <main className="client-layout admin-layout">
+        <aside className="admin-sidebar client-sidebar">
+          <a className="client-brand" href="/worker/dashboard" onClick={(e) => { e.preventDefault(); navigate('/worker/dashboard'); }}>
+            <span className="brand-mark">B</span>
+            <span>BuildPro</span>
+          </a>
+          <nav className="client-navigation">
+            <a href="/worker/dashboard" className={`client-nav-link${isWorkerDashboard ? ' active' : ''}`} onClick={(e) => { e.preventDefault(); navigate('/worker/dashboard'); }}>
+              <span className="client-nav-icon">▦</span> Dashboard
+            </a>
+            <div className="client-nav-group">
+              <span className="client-nav-heading">WORK</span>
+              <a href="/worker/tasks" className={`client-nav-link${isWorkerTasks || workerTaskDetailsMatch ? ' active' : ''}`} onClick={(e) => { e.preventDefault(); navigate('/worker/tasks'); }}>
+                <span className="client-nav-icon">⚒</span> My Tasks
+              </a>
+            </div>
+            <div className="client-nav-group">
+              <span className="client-nav-heading">ACCOUNT</span>
+              <a href="/worker/profile" className={`client-nav-link${isWorkerProfile ? ' active' : ''}`} onClick={(e) => { e.preventDefault(); navigate('/worker/profile'); }}>
+                <span className="client-nav-icon">◉</span> Profile
+              </a>
+            </div>
+          </nav>
+          <div className="client-sidebar-bottom">
+            <div className="client-profile-summary">
+              <span className="client-avatar">{user.fullName.charAt(0).toUpperCase()}</span>
+              <span><strong>{user.fullName}</strong><small>Field Worker</small></span>
+            </div>
+            <button className="client-logout" type="button" onClick={handleLogout} disabled={busy}>
+              <span className="client-nav-icon">↪</span>
+              {busy ? 'Logging out…' : 'Logout'}
+            </button>
+          </div>
+        </aside>
+        <section className="client-content admin-content">
+          <header className="client-topbar admin-topbar">
+            <span>
+              BuildPro <span className="breadcrumb-divider">/</span> Worker <span className="breadcrumb-divider">/</span>{' '}
+              {isWorkerProfile ? 'Profile' : isWorkerTasks || workerTaskDetailsMatch ? 'Tasks' : 'Dashboard'}
+            </span>
+            <span className="client-topbar-account">
+              <span className="client-online-dot"></span> {user.fullName}
+            </span>
+          </header>
+          <div className="client-main admin-main">
+            {isWorkerProfile && (
+              <>
+                <div className="dashboard-heading">
+                  <div><span className="eyebrow">ACCOUNT</span><h1>My profile</h1><p>Your details for the account currently signed in.</p></div>
+                  <div className="dashboard-date"><span>YOUR ROLE</span><strong>Field Worker</strong></div>
+                </div>
+                <AccountProfile user={user} className="client-panel client-profile-panel admin-profile-panel" />
+              </>
+            )}
+
+            {isWorkerTasks && (
+              <WorkerTasksList apiUrl={API_URL} onNavigate={navigate} user={user} />
+            )}
+
+            {workerTaskDetailsMatch && (
+              <WorkerTaskDetails 
+                taskId={workerTaskDetailsMatch[1]} 
+                apiUrl={API_URL} 
+                getCsrfToken={getCsrfToken} 
+                onBack={() => navigate('/worker/tasks')} 
+                user={user} 
+              />
+            )}
+
+            {isWorkerDashboard && (
+              <>
+                <div className="dashboard-heading">
+                  <div>
+                    <span className="eyebrow">WORKSPACE</span>
+                    <h1>Welcome, {user.fullName}.</h1>
+                    <p>Manage your assigned construction tasks.</p>
+                  </div>
+                </div>
+                <div className="dashboard-stats">
+                  <article className="stat-card" onClick={() => navigate('/worker/tasks')} style={{ cursor: 'pointer' }}>
+                    <span className="stat-icon members">⚒</span>
+                    <span className="stat-label">ASSIGNED TASKS</span>
+                    <strong>View Tasks</strong>
+                    <span className="stat-caption">View and update your work progress</span>
+                  </article>
+                </div>
+              </>
+            )}
+            
+            <p className="dashboard-footer">BUILDPRO <span>·</span> CONSTRUCTION MANAGEMENT</p>
+          </div>
+        </section>
+      </main>
+    );
+  }
 
   if (currentPath === '/' || currentPath.startsWith('/about') || (!user && currentPath !== '/login' && currentPath !== '/signup')) {
     return (
