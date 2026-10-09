@@ -23,6 +23,8 @@ import { EngineerProjectRequestsList } from './components/EngineerProjectRequest
 import { EngineerProjectRequestDetails } from './components/EngineerProjectRequestDetails';
 import { ClientProjectsList } from './components/ClientProjectsList';
 import { ClientProjectDetails } from './components/ClientProjectDetails';
+import { EngineerProjectsList } from './components/EngineerProjectsList';
+import { EngineerProjectDetails } from './components/EngineerProjectDetails';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
 const heroImages = [hotelImage, homeImage, infrastructureImage];
@@ -822,12 +824,12 @@ function App() {
   const [clientError, setClientError] = useState('');
   const [clientNotice, setClientNotice] = useState('');
   // const [requestBusy, setRequestBusy] = useState(false);
-  const [projectForm, setProjectForm] = useState({
-    projectName: '',
-    projectType: '',
-    location: '',
-    description: '',
-  });
+  // const [projectForm, setProjectForm] = useState({
+  //   projectName: '',
+  //   projectType: '',
+  //   location: '',
+  //   description: '',
+  // });
   const [clientEditRequest, setClientEditRequest] = useState(null);
 
   const isSignup = mode === 'signup';
@@ -1356,12 +1358,14 @@ function App() {
     && currentPath.startsWith('/admin/')) {
     const isAdminProfile = currentPath === '/admin/profile';
     const isProjectRequests = currentPath === '/admin/project-requests';
+    const isProjects = currentPath === '/admin/projects';
     const requestDetailsMatch = currentPath.match(/^\/admin\/project-requests\/(\d+)$/);
     const projectDetailsMatch = currentPath.match(/^\/admin\/projects\/(\d+)$/);
 
     let pageTitle = 'Overview';
     if (isAdminProfile) pageTitle = 'My profile';
     else if (isProjectRequests) pageTitle = 'Project Requests';
+    else if (isProjects) pageTitle = 'Projects';
     else if (requestDetailsMatch) pageTitle = `Request #${requestDetailsMatch[1]}`;
     else if (projectDetailsMatch) pageTitle = `Project #${projectDetailsMatch[1]}`;
 
@@ -1385,6 +1389,14 @@ function App() {
           }}>
             <span aria-hidden="true">📋</span> Project Requests
           </a>
+          <a className={`sidebar-link${isProjects || projectDetailsMatch ? ' active' : ''}`} href="/admin/projects" onClick={(event) => {
+            event.preventDefault();
+            navigate('/admin/projects');
+          }}>
+            <span aria-hidden="true">🏢</span> Projects
+          </a>
+
+          <span className="sidebar-section-label" style={{ marginTop: '24px' }}>ACCOUNT</span>
           <a className={`sidebar-link${isAdminProfile ? ' active' : ''}`} href="/admin/profile" onClick={(event) => {
             event.preventDefault();
             navigate('/admin/profile');
@@ -1441,6 +1453,16 @@ function App() {
                 onViewDetails={(id) => navigate(`/admin/project-requests/${id}`)}
                 onProjectCreated={(id) => navigate(`/admin/projects/${id}`)}
               />
+            )}
+
+            {isProjects && (
+              <div className="client-panel" style={{ padding: '60px 40px', textAlign: 'center' }}>
+                <div style={{ fontSize: '48px', marginBottom: '16px', color: '#94a3b8' }}>🏢</div>
+                <h3 style={{ fontSize: '20px', color: '#1e293b', marginBottom: '8px' }}>Admin Projects Overview</h3>
+                <p style={{ color: '#64748b', maxWidth: '400px', margin: '0 auto' }}>
+                  The full list of active construction projects will be implemented here.
+                </p>
+              </div>
             )}
 
             {requestDetailsMatch && (
@@ -1646,11 +1668,15 @@ function App() {
     const isEngineerProfile = currentPath === '/engineer/profile';
     const isEngineerProjectRequests = currentPath === '/engineer/project-requests';
     const engineerRequestDetailsMatch = currentPath.match(/^\/engineer\/project-requests\/(\d+)$/);
+    const isEngineerProjects = currentPath === '/engineer/projects';
+    const engineerProjectDetailsMatch = currentPath.match(/^\/engineer\/projects\/(\d+)$/);
 
     let pageTitle = 'Dashboard';
     if (isEngineerProfile) pageTitle = 'My profile';
-    else if (isEngineerProjectRequests) pageTitle = 'Projects';
+    else if (isEngineerProjectRequests) pageTitle = 'Technical Reviews';
     else if (engineerRequestDetailsMatch) pageTitle = `Request #${engineerRequestDetailsMatch[1]}`;
+    else if (isEngineerProjects) pageTitle = 'Projects';
+    else if (engineerProjectDetailsMatch) pageTitle = `Project #${engineerProjectDetailsMatch[1]}`;
 
     return (
       <main className="client-layout admin-layout">
@@ -1664,9 +1690,12 @@ function App() {
               <span className="client-nav-icon">▦</span> Dashboard
             </a>
             <div className="client-nav-group">
-              <span className="client-nav-heading">TASKS</span>
+              <span className="client-nav-heading">PROJECTS</span>
               <a href="/engineer/project-requests" className={`client-nav-link${isEngineerProjectRequests || engineerRequestDetailsMatch ? ' active' : ''}`} onClick={(e) => { e.preventDefault(); navigate('/engineer/project-requests'); }}>
-                <span className="client-nav-icon">▤</span> Projects
+                <span className="client-nav-icon">▤</span> Technical Reviews
+              </a>
+              <a href="/engineer/projects" className={`client-nav-link${isEngineerProjects || engineerProjectDetailsMatch ? ' active' : ''}`} onClick={(e) => { e.preventDefault(); navigate('/engineer/projects'); }}>
+                <span className="client-nav-icon">🏢</span> My Projects
               </a>
             </div>
             <div className="client-nav-group">
@@ -1720,6 +1749,21 @@ function App() {
                 apiUrl={API_URL}
                 getCsrfToken={getCsrfToken}
                 onBack={() => navigate('/engineer/project-requests')}
+              />
+            )}
+
+            {isEngineerProjects && (
+              <EngineerProjectsList
+                apiUrl={API_URL}
+                onNavigate={navigate}
+              />
+            )}
+
+            {engineerProjectDetailsMatch && (
+              <EngineerProjectDetails
+                projectId={engineerProjectDetailsMatch[1]}
+                apiUrl={API_URL}
+                onBack={() => navigate('/engineer/projects')}
               />
             )}
 
@@ -1790,7 +1834,7 @@ function App() {
 
   return (
     <main className="auth-layout">
-      <section className="brand-panel" aria-label="Construction management">
+      <section className="brand-panel" aria-label="Construction management" style={{ backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.7)), url('https://images.unsplash.com/photo-1503387762-592deb58ef4e?q=80&w=2071&auto=format&fit=crop')`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
         <a className="brand" href="/" aria-label="Buildwise home">
           <span className="brand-mark" aria-hidden="true">B</span>
           <span>BuildPro</span>
