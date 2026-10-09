@@ -9,6 +9,7 @@ export function EngineerProjectDetails({ projectId, apiUrl, getCsrfToken, onBack
   const [error, setError] = useState('');
   const [showCreateTask, setShowCreateTask] = useState(false);
   const [reviewTaskId, setReviewTaskId] = useState(null);
+  const [attendance, setAttendance] = useState([]);
 
   useEffect(() => {
     let mounted = true;
@@ -23,13 +24,21 @@ export function EngineerProjectDetails({ projectId, apiUrl, getCsrfToken, onBack
         if (tasksRes.ok) {
           tasksData = await tasksRes.json();
         }
+
+        // Fetch attendance
+        const attRes = await fetch(`${apiUrl}/api/engineer/projects/${projectId}/attendance/today`, { credentials: 'include' });
+        let attData = [];
+        if (attRes.ok) {
+          attData = await attRes.json();
+        }
         
-        return { projData, tasksData };
+        return { projData, tasksData, attData };
       })
-      .then(({ projData, tasksData }) => {
+      .then(({ projData, tasksData, attData }) => {
         if (mounted) {
           setProject(projData);
           setTasks(tasksData);
+          setAttendance(attData);
           setError('');
         }
       })
@@ -144,19 +153,52 @@ export function EngineerProjectDetails({ projectId, apiUrl, getCsrfToken, onBack
         </div>
       </div>
       
-      <div className="client-panel" style={{ padding: '24px', marginBottom: '24px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-          <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '24px', height: '24px', borderRadius: '50%', background: '#0f172a', color: 'white', fontSize: '12px', fontWeight: 'bold' }}>3</span>
-          <h3 style={{ margin: 0, fontSize: '14px', textTransform: 'uppercase', letterSpacing: '0.5px', color: '#0f172a' }}>Progress Overview</h3>
-        </div>
-        
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
-            <strong style={{ color: '#0f172a' }}>Overall Progress</strong>
-            <strong style={{ color: '#3b82f6' }}>0%</strong>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '24px' }}>
+        <div className="client-panel" style={{ padding: '24px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+            <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '24px', height: '24px', borderRadius: '50%', background: '#0f172a', color: 'white', fontSize: '12px', fontWeight: 'bold' }}>3</span>
+            <h3 style={{ margin: 0, fontSize: '14px', textTransform: 'uppercase', letterSpacing: '0.5px', color: '#0f172a' }}>Progress Overview</h3>
           </div>
-          <div style={{ width: '100%', height: '8px', background: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
-            <div style={{ width: '0%', height: '100%', background: '#3b82f6' }}></div>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
+              <strong style={{ color: '#0f172a' }}>Overall Progress</strong>
+              <strong style={{ color: '#3b82f6' }}>{project.progress || 0}%</strong>
+            </div>
+            <div style={{ width: '100%', height: '8px', background: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
+              <div style={{ width: `${project.progress || 0}%`, height: '100%', background: '#3b82f6' }}></div>
+            </div>
+          </div>
+        </div>
+
+        <div className="client-panel" style={{ padding: '24px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+            <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '24px', height: '24px', borderRadius: '50%', background: '#0f172a', color: 'white', fontSize: '12px', fontWeight: 'bold' }}>4</span>
+            <h3 style={{ margin: 0, fontSize: '14px', textTransform: 'uppercase', letterSpacing: '0.5px', color: '#0f172a' }}>Today's Worker Attendance</h3>
+          </div>
+          <div style={{ maxHeight: '150px', overflowY: 'auto' }}>
+            {attendance.length === 0 ? (
+              <p style={{ margin: 0, fontSize: '13px', color: '#64748b' }}>No workers have clocked in today.</p>
+            ) : (
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                <tbody>
+                  {attendance.map(a => (
+                    <tr key={a.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                      <td style={{ padding: '8px 0', fontWeight: '600' }}>{a.worker?.fullName}</td>
+                      <td style={{ padding: '8px 0' }}>
+                        <span className={`status-badge status-${a.status.toLowerCase()}`}>
+                          {a.status.replace('_', ' ')}
+                        </span>
+                      </td>
+                      <td style={{ padding: '8px 0', textAlign: 'right', color: '#64748b' }}>
+                        {new Date(a.clockInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        {a.clockOutTime && ` - ${new Date(a.clockOutTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         </div>
       </div>

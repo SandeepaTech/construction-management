@@ -27,6 +27,7 @@ import { EngineerProjectsList } from './components/EngineerProjectsList';
 import { EngineerProjectDetails } from './components/EngineerProjectDetails';
 import { WorkerTasksList } from './components/WorkerTasksList';
 import { WorkerTaskDetails } from './components/WorkerTaskDetails';
+import { WorkerAttendance } from './components/WorkerAttendance';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
 const heroImages = [hotelImage, homeImage, infrastructureImage];
@@ -1800,6 +1801,7 @@ function App() {
   if (user && user.role === 'FIELD_WORKER' && currentPath.startsWith('/worker')) {
     const isWorkerTasks = currentPath === '/worker/tasks';
     const workerTaskDetailsMatch = currentPath.match(/^\/worker\/tasks\/(\d+)$/);
+    const isWorkerAttendance = currentPath === '/worker/attendance';
     const isWorkerProfile = currentPath === '/worker/profile';
     const isWorkerDashboard = currentPath === '/worker/dashboard' || currentPath === '/worker';
 
@@ -1820,6 +1822,9 @@ function App() {
             </a>
             <div className="client-nav-group">
               <span className="client-nav-heading">WORK</span>
+              <a href="/worker/attendance" className={`client-nav-link${isWorkerAttendance ? ' active' : ''}`} onClick={(e) => { e.preventDefault(); navigate('/worker/attendance'); }}>
+                <span className="client-nav-icon">⌚</span> Attendance
+              </a>
               <a href="/worker/tasks" className={`client-nav-link${isWorkerTasks || workerTaskDetailsMatch ? ' active' : ''}`} onClick={(e) => { e.preventDefault(); navigate('/worker/tasks'); }}>
                 <span className="client-nav-icon">⚒</span> My Tasks
               </a>
@@ -1846,7 +1851,7 @@ function App() {
           <header className="client-topbar admin-topbar">
             <span>
               BuildPro <span className="breadcrumb-divider">/</span> Worker <span className="breadcrumb-divider">/</span>{' '}
-              {isWorkerProfile ? 'Profile' : isWorkerTasks || workerTaskDetailsMatch ? 'Tasks' : 'Dashboard'}
+              {isWorkerProfile ? 'Profile' : isWorkerAttendance ? 'Attendance' : isWorkerTasks || workerTaskDetailsMatch ? 'Tasks' : 'Dashboard'}
             </span>
             <span className="client-topbar-account">
               <span className="client-online-dot"></span> {user.fullName}
@@ -1875,6 +1880,10 @@ function App() {
                 onBack={() => navigate('/worker/tasks')} 
                 user={user} 
               />
+            )}
+            
+            {isWorkerAttendance && (
+              <WorkerAttendance apiUrl={API_URL} getCsrfToken={getCsrfToken} user={user} />
             )}
 
             {isWorkerDashboard && (
