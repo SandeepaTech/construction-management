@@ -66,7 +66,7 @@ public class Project {
 		this.approvedBudget = approvedBudget;
 		this.startDate = startDate;
 		this.expectedEndDate = expectedEndDate;
-		this.status = "PLANNED";
+		this.status = "PLANNING";
 		this.site = site;
 		this.projectRequestId = projectRequestId;
 		this.createdAt = Instant.now();

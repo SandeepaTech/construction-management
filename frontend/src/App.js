@@ -21,6 +21,8 @@ import { NotificationBell } from './components/NotificationBell';
 import { ClientNotifications } from './components/ClientNotifications';
 import { EngineerProjectRequestsList } from './components/EngineerProjectRequestsList';
 import { EngineerProjectRequestDetails } from './components/EngineerProjectRequestDetails';
+import { ClientProjectsList } from './components/ClientProjectsList';
+import { ClientProjectDetails } from './components/ClientProjectDetails';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
 const heroImages = [hotelImage, homeImage, infrastructureImage];
@@ -66,7 +68,9 @@ async function sendAuthRequest(path, payload) {
           ? 'Email, password, or selected account type is incorrect.'
           : response.status === 403
             ? 'This account does not have permission for the selected account type.'
-          : `The server could not complete the request (HTTP ${response.status}). Check the Spring Boot backend logs.`);
+            : response.status === 409
+              ? 'An account with this email already exists.'
+              : `The server could not complete the request (HTTP ${response.status}). Check the Spring Boot backend logs.`);
     throw new Error(message || errorBody.title || errorBody.error || 'The server rejected the request.');
   }
   return response.status === 204 ? null : response.json();
@@ -1147,7 +1151,8 @@ function App() {
 
   const isSubmitRequestPage = currentPath === '/client/submit-request' || currentPath === '/client/project-request/new';
   const isRequestsListPage = currentPath === '/client/project-requests' || currentPath === '/client/requests';
-  const clientPage = clientPageTitles[currentPath] ? currentPath : (isSubmitRequestPage ? '/client/project-request/new' : (isRequestsListPage ? '/client/requests' : '/client/dashboard'));
+  const clientProjectDetailsMatch = currentPath.match(/^\/client\/projects\/(\d+)$/);
+  const clientPage = clientPageTitles[currentPath] ? currentPath : (isSubmitRequestPage ? '/client/project-request/new' : (isRequestsListPage ? '/client/requests' : (clientProjectDetailsMatch ? '/client/projects' : '/client/dashboard')));
 
   if ((user?.role === 'CLIENT' || user?.role === 'CLIENT_BUILDING_OWNER') && currentPath.startsWith('/client/')) {
     return (
@@ -1222,7 +1227,7 @@ function App() {
         <section className="client-content">
           <header className="client-topbar-modern">
             <div className="topbar-breadcrumb">
-              BuildPro <span className="breadcrumb-divider">{'>'}</span> {clientPageTitles[currentPath] || 'Workspace'}
+              BuildPro <span className="breadcrumb-divider">{'>'}</span> {clientProjectDetailsMatch ? `Project #${clientProjectDetailsMatch[1]}` : (clientPageTitles[currentPath] || 'Workspace')}
             </div>
             
             <div className="topbar-right">
@@ -1318,7 +1323,18 @@ function App() {
             )}
 
             {clientPage === '/client/projects' && (
-              <ClientPlaceholder icon="⌂" section="PROJECTS" title="My Projects" text="Once a project request is approved and work begins, your project details will be available here." />
+              clientProjectDetailsMatch ? (
+                <ClientProjectDetails
+                  projectId={clientProjectDetailsMatch[1]}
+                  apiUrl={API_URL}
+                  onBack={() => navigate('/client/projects')}
+                />
+              ) : (
+                <ClientProjectsList
+                  apiUrl={API_URL}
+                  onNavigate={navigate}
+                />
+              )
             )}
             {clientPage === '/client/progress' && (
               <ClientPlaceholder icon="↗" section="PROJECTS" title="Project Progress" text="Project updates, milestones, and progress reports will appear here when you have an active project." />
