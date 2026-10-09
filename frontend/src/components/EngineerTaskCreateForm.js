@@ -129,82 +129,105 @@ export function EngineerTaskCreateForm({ projectId, apiUrl, getCsrfToken, onCanc
       
       {error && <div className="form-error-banner" style={{ marginBottom: '24px' }}>{error}</div>}
 
-      <form onSubmit={handleSubmit} className="auth-form" style={{ maxWidth: '800px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-          <div style={{ gridColumn: '1 / span 2' }}>
-            <label htmlFor="title">Task Title</label>
-            <input id="title" name="title" type="text" value={form.title} onChange={updateField} required maxLength={200} placeholder="e.g. Foundation Excavation" />
-          </div>
-
-          <div style={{ gridColumn: '1 / span 2' }}>
-            <label htmlFor="description">Description</label>
-            <textarea id="description" name="description" value={form.description} onChange={updateField} rows={3} placeholder="Detailed instructions for the task..." />
-          </div>
-
-          <div>
-            <label htmlFor="startDate">Start Date</label>
-            <input id="startDate" name="startDate" type="date" value={form.startDate} onChange={updateField} />
-          </div>
-
-          <div>
-            <label htmlFor="dueDate">Due Date</label>
-            <input id="dueDate" name="dueDate" type="date" value={form.dueDate} onChange={updateField} />
-          </div>
-
-          <div>
-            <label htmlFor="priority">Priority</label>
-            <select id="priority" name="priority" value={form.priority} onChange={updateField} required>
-              <option value="LOW">Low</option>
-              <option value="MEDIUM">Medium</option>
-              <option value="HIGH">High</option>
-              <option value="CRITICAL">Critical</option>
-            </select>
-          </div>
-
-          <div>
-            <label htmlFor="estimatedHours">Estimated Hours</label>
-            <input id="estimatedHours" name="estimatedHours" type="number" min="1" value={form.estimatedHours} onChange={updateField} placeholder="e.g. 24" />
-          </div>
-
-          <div style={{ gridColumn: '1 / span 2' }}>
-            <label>Assigned Workers (Select multiple)</label>
-            <div style={{ border: '1px solid #e2e8f0', borderRadius: '6px', maxHeight: '200px', overflowY: 'auto', padding: '12px' }}>
-              {workers.length === 0 ? (
-                <p style={{ margin: 0, color: '#64748b', fontSize: '14px' }}>No field workers available.</p>
-              ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '8px' }}>
-                  {workers.map(worker => (
-                    <label key={worker.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', margin: 0, fontWeight: 'normal' }}>
-                      <input 
-                        type="checkbox" 
-                        checked={form.assignedWorkerIds.includes(worker.id.toString())}
-                        onChange={() => handleWorkerSelection(worker.id.toString())}
-                        style={{ margin: 0, width: 'auto' }}
-                      />
-                      {worker.fullName}
-                    </label>
-                  ))}
-                </div>
-              )}
+      <form onSubmit={handleSubmit} className="client-request-form">
+        <div className="form-section-card">
+          <div className="section-card-header">
+            <span className="section-badge">1</span>
+            <div>
+              <h3>Task Details</h3>
+              <p>Basic information and scheduling for the new task</p>
             </div>
-            <span style={{ display: 'block', fontSize: '13px', color: '#64748b', marginTop: '8px' }}>
-              Selected: {form.assignedWorkerIds.length} worker(s)
-            </span>
           </div>
+          
+          <div className="section-grid">
+            <div className="form-field full-width">
+              <label htmlFor="title">Task Title <span className="req">*</span></label>
+              <input id="title" name="title" type="text" value={form.title} onChange={updateField} required maxLength={200} placeholder="e.g. Foundation Excavation" />
+            </div>
 
-          <div style={{ gridColumn: '1 / span 2' }}>
-            <label htmlFor="leadWorkerId">Lead Worker (Must be selected from assigned workers)</label>
-            <select id="leadWorkerId" name="leadWorkerId" value={form.leadWorkerId} onChange={updateField} required disabled={selectedWorkers.length === 0}>
-              <option value="" disabled>Select a lead worker</option>
-              {selectedWorkers.map(worker => (
-                <option key={worker.id} value={worker.id}>{worker.fullName}</option>
-              ))}
-            </select>
+            <div className="form-field full-width">
+              <label htmlFor="description">Description</label>
+              <textarea id="description" name="description" value={form.description} onChange={updateField} rows={3} placeholder="Detailed instructions for the task..." />
+            </div>
+
+            <div className="form-field">
+              <label htmlFor="startDate">Start Date</label>
+              <input id="startDate" name="startDate" type="date" value={form.startDate} onChange={updateField} />
+            </div>
+
+            <div className="form-field">
+              <label htmlFor="dueDate">Due Date</label>
+              <input id="dueDate" name="dueDate" type="date" value={form.dueDate} onChange={updateField} />
+            </div>
+
+            <div className="form-field">
+              <label htmlFor="priority">Priority <span className="req">*</span></label>
+              <select id="priority" name="priority" value={form.priority} onChange={updateField} required>
+                <option value="LOW">Low</option>
+                <option value="MEDIUM">Medium</option>
+                <option value="HIGH">High</option>
+                <option value="CRITICAL">Critical</option>
+              </select>
+            </div>
+
+            <div className="form-field">
+              <label htmlFor="estimatedHours">Estimated Hours</label>
+              <input id="estimatedHours" name="estimatedHours" type="number" min="1" value={form.estimatedHours} onChange={updateField} placeholder="e.g. 24" />
+            </div>
           </div>
+        </div>
 
-          <div style={{ gridColumn: '1 / span 2' }}>
-            <label htmlFor="notes">Notes / Special Instructions</label>
-            <textarea id="notes" name="notes" value={form.notes} onChange={updateField} rows={2} />
+        <div className="form-section-card">
+          <div className="section-card-header">
+            <span className="section-badge">2</span>
+            <div>
+              <h3>Workforce Assignment</h3>
+              <p>Assign field workers and designate a lead worker</p>
+            </div>
+          </div>
+          
+          <div className="section-grid">
+            <div className="form-field full-width">
+              <label>Assigned Workers <span className="req">*</span></label>
+              <div style={{ border: '1px solid #e2e8f0', borderRadius: '6px', maxHeight: '200px', overflowY: 'auto', padding: '12px', background: '#fff' }}>
+                {workers.length === 0 ? (
+                  <p style={{ margin: 0, color: '#64748b', fontSize: '14px' }}>No field workers available.</p>
+                ) : (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '8px' }}>
+                    {workers.map(worker => (
+                      <label key={worker.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', margin: 0, fontWeight: 'normal' }}>
+                        <input 
+                          type="checkbox" 
+                          checked={form.assignedWorkerIds.includes(worker.id.toString())}
+                          onChange={() => handleWorkerSelection(worker.id.toString())}
+                          style={{ margin: 0, width: 'auto' }}
+                        />
+                        {worker.fullName}
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <span style={{ display: 'block', fontSize: '13px', color: '#64748b', marginTop: '8px' }}>
+                Selected: {form.assignedWorkerIds.length} worker(s)
+              </span>
+            </div>
+
+            <div className="form-field full-width">
+              <label htmlFor="leadWorkerId">Lead Worker <span className="req">*</span></label>
+              <select id="leadWorkerId" name="leadWorkerId" value={form.leadWorkerId} onChange={updateField} required disabled={selectedWorkers.length === 0}>
+                <option value="" disabled>Select a lead worker from assigned workers</option>
+                {selectedWorkers.map(worker => (
+                  <option key={worker.id} value={worker.id}>{worker.fullName}</option>
+                ))}
+              </select>
+              <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#64748b' }}>The lead worker is responsible for updating task progress.</p>
+            </div>
+
+            <div className="form-field full-width">
+              <label htmlFor="notes">Notes / Special Instructions</label>
+              <textarea id="notes" name="notes" value={form.notes} onChange={updateField} rows={3} placeholder="Any additional notes for the workers..." />
+            </div>
           </div>
         </div>
 
