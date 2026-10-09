@@ -862,6 +862,9 @@ function App() {
     if (user && user.role === 'SITE_ENGINEER' && currentPath.startsWith('/workspace/')) {
       navigate('/engineer/dashboard');
     }
+    if (user && user.role === 'FIELD_WORKER' && currentPath.startsWith('/workspace/')) {
+      navigate('/worker/dashboard');
+    }
   }, [user, currentPath, navigate]);
 
   useEffect(() => {
@@ -887,6 +890,14 @@ function App() {
           } else if (account.role === 'CLIENT' || account.role === 'CLIENT_BUILDING_OWNER') {
             if (!isPublicPath && !window.location.pathname.startsWith('/client/')) {
               navigate('/client/profile');
+            }
+          } else if (account.role === 'SITE_ENGINEER') {
+            if (!isPublicPath && !window.location.pathname.startsWith('/engineer/')) {
+              navigate('/engineer/dashboard');
+            }
+          } else if (account.role === 'FIELD_WORKER') {
+            if (!isPublicPath && !window.location.pathname.startsWith('/worker/')) {
+              navigate('/worker/dashboard');
             }
           } else if (!isPublicPath && !window.location.pathname.startsWith('/workspace/')) {
             navigate('/workspace/profile');
@@ -957,10 +968,14 @@ function App() {
     } else if (user?.role === 'SITE_ENGINEER' 
       && !isPublicPath && !currentPath.startsWith('/engineer/')) {
       navigate('/engineer/dashboard');
+    } else if (user?.role === 'FIELD_WORKER' 
+      && !isPublicPath && !currentPath.startsWith('/worker/')) {
+      navigate('/worker/dashboard');
     } else if (user
       && user.role !== 'ADMIN' && user.role !== 'ADMIN_PROJECT_MANAGER'
       && user.role !== 'CLIENT' && user.role !== 'CLIENT_BUILDING_OWNER'
       && user.role !== 'SITE_ENGINEER'
+      && user.role !== 'FIELD_WORKER'
       && !isPublicPath && !currentPath.startsWith('/workspace/')) {
       navigate('/workspace/profile');
     }
@@ -1059,6 +1074,8 @@ function App() {
           navigate('/client/dashboard');
         } else if (account.role === 'SITE_ENGINEER') {
           navigate('/engineer/dashboard');
+        } else if (account.role === 'FIELD_WORKER') {
+          navigate('/worker/dashboard');
         } else {
           navigate('/workspace/dashboard');
         }
@@ -1817,22 +1834,28 @@ function App() {
             <span>BuildPro</span>
           </a>
           <nav className="client-navigation">
-            <a href="/worker/dashboard" className={`client-nav-link${isWorkerDashboard ? ' active' : ''}`} onClick={(e) => { e.preventDefault(); navigate('/worker/dashboard'); }}>
-              <span className="client-nav-icon">▦</span> Dashboard
-            </a>
             <div className="client-nav-group">
-              <span className="client-nav-heading">WORK</span>
-              <a href="/worker/attendance" className={`client-nav-link${isWorkerAttendance ? ' active' : ''}`} onClick={(e) => { e.preventDefault(); navigate('/worker/attendance'); }}>
-                <span className="client-nav-icon">⌚</span> Attendance
+              <span className="client-nav-heading">WORKSPACE</span>
+              <a href="/worker/dashboard" className={`client-nav-link${isWorkerDashboard ? ' active' : ''}`} onClick={(e) => { e.preventDefault(); navigate('/worker/dashboard'); }}>
+                <span className="client-nav-icon">▦</span> Dashboard
               </a>
+            </div>
+            <div className="client-nav-group">
+              <span className="client-nav-heading">TASKS</span>
               <a href="/worker/tasks" className={`client-nav-link${isWorkerTasks || workerTaskDetailsMatch ? ' active' : ''}`} onClick={(e) => { e.preventDefault(); navigate('/worker/tasks'); }}>
                 <span className="client-nav-icon">⚒</span> My Tasks
               </a>
             </div>
             <div className="client-nav-group">
+              <span className="client-nav-heading">ATTENDANCE</span>
+              <a href="/worker/attendance" className={`client-nav-link${isWorkerAttendance ? ' active' : ''}`} onClick={(e) => { e.preventDefault(); navigate('/worker/attendance'); }}>
+                <span className="client-nav-icon">⌚</span> Attendance
+              </a>
+            </div>
+            <div className="client-nav-group">
               <span className="client-nav-heading">ACCOUNT</span>
               <a href="/worker/profile" className={`client-nav-link${isWorkerProfile ? ' active' : ''}`} onClick={(e) => { e.preventDefault(); navigate('/worker/profile'); }}>
-                <span className="client-nav-icon">◉</span> Profile
+                <span className="client-nav-icon">◉</span> My Profile
               </a>
             </div>
           </nav>
