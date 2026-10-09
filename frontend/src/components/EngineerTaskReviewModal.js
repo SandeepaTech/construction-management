@@ -10,8 +10,8 @@ export function EngineerTaskReviewModal({ taskId, apiUrl, getCsrfToken, onClose,
 
   useEffect(() => {
     Promise.all([
-      fetch(`${apiUrl}/api/worker/tasks/${taskId}`, { credentials: 'include' }),
-      fetch(`${apiUrl}/api/worker/tasks/${taskId}/progress`, { credentials: 'include' })
+      fetch(`${apiUrl}/api/engineer/tasks/${taskId}`, { credentials: 'include' }),
+      fetch(`${apiUrl}/api/engineer/tasks/${taskId}/progress`, { credentials: 'include' })
     ]).then(async ([taskRes, histRes]) => {
       if (!taskRes.ok) throw new Error('Failed to load task details');
       setTask(await taskRes.json());

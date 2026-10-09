@@ -46,8 +46,8 @@ public class TaskController {
 		if (allTasks.isEmpty()) {
 			project.setProgress(0);
 		} else {
-			long completed = allTasks.stream().filter(t -> t.getStatus() == TaskStatus.COMPLETED).count();
-			int progress = (int) ((completed * 100) / allTasks.size());
+			int sumProgress = allTasks.stream().mapToInt(t -> t.getProgress() != null ? t.getProgress() : 0).sum();
+			int progress = sumProgress / allTasks.size();
 			project.setProgress(progress);
 		}
 		projectRepository.save(project);
@@ -146,6 +146,36 @@ public class TaskController {
 		}
 
 		return TaskResponse.from(savedTask);
+	}
+
+	@GetMapping("/tasks/{taskId}")
+	public TaskResponse getTaskDetails(@PathVariable Long taskId, Authentication authentication) {
+		AppUser user = userRepository.findByEmailIgnoreCase(authentication.getName())
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
+		
+		Task task = taskRepository.findById(taskId)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found"));
+
+		if (task.getAssignedSiteEngineer() == null || !task.getAssignedSiteEngineer().getId().equals(user.getId())) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not authorized to view this task");
+		}
+		return TaskResponse.from(task);
+	}
+
+	@GetMapping("/tasks/{taskId}/progress")
+	public List<TaskProgressUpdateResponse> getTaskProgress(@PathVariable Long taskId, Authentication authentication) {
+		AppUser user = userRepository.findByEmailIgnoreCase(authentication.getName())
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
+		
+		Task task = taskRepository.findById(taskId)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found"));
+
+		if (task.getAssignedSiteEngineer() == null || !task.getAssignedSiteEngineer().getId().equals(user.getId())) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not authorized to view this task progress");
+		}
+		
+		return progressRepository.findByTaskIdOrderByCreatedAtDesc(taskId)
+				.stream().map(TaskProgressUpdateResponse::from).toList();
 	}
 
 	@PostMapping("/tasks/{taskId}/approve")

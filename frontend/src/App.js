@@ -838,18 +838,31 @@ function App() {
   const isSignup = mode === 'signup';
 
   const navigate = useCallback((path) => {
-    if (window.location.pathname !== path) {
-      window.history.pushState({}, '', path);
+    let finalPath = path;
+    const adminReqMatch = finalPath.match(/^\/admin\/requests\/(\d+)$/);
+    if (adminReqMatch) {
+      finalPath = `/admin/project-requests/${adminReqMatch[1]}`;
     }
-    setCurrentPath(path);
+
+    if (window.location.pathname !== finalPath) {
+      window.history.pushState({}, '', finalPath);
+    }
+    setCurrentPath(finalPath);
   }, []);
 
   useEffect(() => {
     function syncPath() {
-      setCurrentPath(window.location.pathname);
-      if (window.location.pathname === '/signup') {
+      let finalPath = window.location.pathname;
+      const adminReqMatch = finalPath.match(/^\/admin\/requests\/(\d+)$/);
+      if (adminReqMatch) {
+        finalPath = `/admin/project-requests/${adminReqMatch[1]}`;
+        window.history.replaceState({}, '', finalPath);
+      }
+
+      setCurrentPath(finalPath);
+      if (finalPath === '/signup') {
         setMode('signup');
-      } else if (window.location.pathname === '/login') {
+      } else if (finalPath === '/login') {
         setMode('login');
       }
     }

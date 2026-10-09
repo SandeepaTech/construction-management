@@ -44,6 +44,18 @@ public class WorkerTaskController {
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
 	}
 
+	private void updateProjectProgress(backend.project.Project project) {
+		java.util.List<Task> allTasks = taskRepository.findByProjectIdOrderByCreatedAtDesc(project.getId());
+		if (allTasks.isEmpty()) {
+			project.setProgress(0);
+		} else {
+			int sumProgress = allTasks.stream().mapToInt(t -> t.getProgress() != null ? t.getProgress() : 0).sum();
+			int progress = sumProgress / allTasks.size();
+			project.setProgress(progress);
+		}
+		projectRepository.save(project);
+	}
+
 	@GetMapping
 	public List<TaskResponse> getMyTasks(Authentication authentication) {
 		AppUser worker = getAuthenticatedWorker(authentication);
@@ -142,6 +154,8 @@ public class WorkerTaskController {
 		task.setProgress(progress);
 		task.setUpdatedAt(Instant.now());
 		Task savedTask = taskRepository.save(task);
+
+		updateProjectProgress(savedTask.getProject());
 
 		TaskProgressUpdate history = new TaskProgressUpdate(savedTask, progress, request.getNote(), worker);
 		progressRepository.save(history);
