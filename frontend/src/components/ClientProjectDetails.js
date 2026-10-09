@@ -64,9 +64,23 @@ export function ClientProjectDetails({ projectId, apiUrl, onBack }) {
             <h1 style={{ marginBottom: '8px' }}>{project.name}</h1>
             <p style={{ margin: 0 }}>Project Type: {project.projectType || 'Not specified'}</p>
           </div>
-          <span className={`status-badge status-${project.status.toLowerCase()}`} style={{ fontSize: '14px', padding: '6px 12px' }}>
-            {project.status.replace(/_/g, ' ')}
-          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+              <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 600, marginBottom: '4px' }}>PROJECT PROGRESS</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ width: '80px', height: '6px', background: '#e2e8f0', borderRadius: '3px', overflow: 'hidden' }}>
+                  <div style={{ width: `${project.progress || 0}%`, height: '100%', background: (project.progress || 0) === 100 ? '#10b981' : '#3b82f6' }}></div>
+                </div>
+                <strong style={{ fontSize: '14px', color: '#0f172a' }}>{project.progress || 0}%</strong>
+              </div>
+            </div>
+            <div>
+              <span className="eyebrow" style={{ display: 'block', marginBottom: '4px' }}>STATUS</span>
+              <span className={`status-badge status-${project.status.toLowerCase()}`} style={{ fontSize: '14px', padding: '6px 12px' }}>
+                {project.status.replace(/_/g, ' ')}
+              </span>
+            </div>
+          </div>
         </div>
       </div>
 

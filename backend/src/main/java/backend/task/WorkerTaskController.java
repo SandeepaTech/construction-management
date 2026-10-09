@@ -148,4 +148,43 @@ public class WorkerTaskController {
 
 		return TaskResponse.from(savedTask);
 	}
+
+	@PostMapping("/{id}/submit")
+	public TaskResponse submitTaskForReview(@PathVariable Long id, @RequestBody TaskProgressRequest request, Authentication authentication) {
+		AppUser worker = getAuthenticatedWorker(authentication);
+		Task task = taskRepository.findById(id)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found"));
+
+		if (!task.getLeadWorker().getId().equals(worker.getId())) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only the Lead Worker can submit the task for review");
+		}
+
+		if (task.getStatus() != TaskStatus.IN_PROGRESS) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Only IN_PROGRESS tasks can be submitted");
+		}
+
+		if (task.getProgress() != 100) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Progress must be 100% to submit for review");
+		}
+
+		task.setStatus(TaskStatus.UNDER_REVIEW);
+		task.setSubmittedForReviewAt(Instant.now());
+		task.setUpdatedAt(Instant.now());
+		Task savedTask = taskRepository.save(task);
+
+		if (request.getNote() != null && !request.getNote().trim().isEmpty()) {
+			TaskProgressUpdate history = new TaskProgressUpdate(savedTask, 100, "FINAL WORK NOTE: " + request.getNote(), worker);
+			progressRepository.save(history);
+		}
+
+		// Notify site engineer
+		AppUser engineer = task.getAssignedSiteEngineer();
+		if (engineer != null) {
+			notificationService.notifyUser(engineer, "Task Ready for Review", 
+					task.getTitle() + " has been submitted for review by " + worker.getFullName() + ".", 
+					"/engineer/projects/" + task.getProject().getId());
+		}
+
+		return TaskResponse.from(savedTask);
+	}
 }

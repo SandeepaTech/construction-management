@@ -90,6 +90,10 @@ public class Task {
 	@Column
 	private Instant completedAt;
 
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "reviewed_by_id")
+	private AppUser reviewedBy;
+
 	@Column(nullable = false, updatable = false)
 	private Instant createdAt = Instant.now();
 
@@ -151,6 +155,8 @@ public class Task {
 	public void setSubmittedForReviewAt(Instant submittedForReviewAt) { this.submittedForReviewAt = submittedForReviewAt; }
 	public Instant getCompletedAt() { return completedAt; }
 	public void setCompletedAt(Instant completedAt) { this.completedAt = completedAt; }
+	public AppUser getReviewedBy() { return reviewedBy; }
+	public void setReviewedBy(AppUser reviewedBy) { this.reviewedBy = reviewedBy; }
 	public Instant getCreatedAt() { return createdAt; }
 	public Instant getUpdatedAt() { return updatedAt; }
 	public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }

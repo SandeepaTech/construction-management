@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { EngineerTaskCreateForm } from './EngineerTaskCreateForm';
+import { EngineerTaskReviewModal } from './EngineerTaskReviewModal';
 
 export function EngineerProjectDetails({ projectId, apiUrl, getCsrfToken, onBack }) {
   const [project, setProject] = useState(null);
@@ -7,6 +8,7 @@ export function EngineerProjectDetails({ projectId, apiUrl, getCsrfToken, onBack
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showCreateTask, setShowCreateTask] = useState(false);
+  const [reviewTaskId, setReviewTaskId] = useState(null);
 
   useEffect(() => {
     let mounted = true;
@@ -73,11 +75,22 @@ export function EngineerProjectDetails({ projectId, apiUrl, getCsrfToken, onBack
           <h1 style={{ margin: '0 0 8px 0', fontSize: '28px', color: '#0f172a' }}>{project.name}</h1>
           <p style={{ margin: 0, color: '#64748b' }}>Project ID: #{project.id}</p>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <span style={{ fontSize: '14px', color: '#64748b', fontWeight: 600 }}>STATUS:</span>
-          <span className={`status-badge status-${project.status.toLowerCase()}`} style={{ fontSize: '14px', padding: '6px 12px' }}>
-            {project.status.replace(/_/g, ' ')}
-          </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '32px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+            <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 600, marginBottom: '4px' }}>PROJECT PROGRESS</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{ width: '120px', height: '8px', background: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
+                <div style={{ width: `${project.progress || 0}%`, height: '100%', background: (project.progress || 0) === 100 ? '#10b981' : '#3b82f6' }}></div>
+              </div>
+              <strong style={{ fontSize: '18px', color: '#0f172a' }}>{project.progress || 0}%</strong>
+            </div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <span style={{ fontSize: '14px', color: '#64748b', fontWeight: 600 }}>STATUS:</span>
+            <span className={`status-badge status-${project.status.toLowerCase()}`} style={{ fontSize: '14px', padding: '6px 12px' }}>
+              {project.status.replace(/_/g, ' ')}
+            </span>
+          </div>
         </div>
       </div>
 
@@ -214,13 +227,26 @@ export function EngineerProjectDetails({ projectId, apiUrl, getCsrfToken, onBack
                   </td>
                   <td>{task.progress}%</td>
                   <td>
-                    <button className="table-action-btn">View</button>
+                    <button className="table-action-btn" onClick={() => setReviewTaskId(task.id)}>View / Review</button>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+      )}
+
+      {reviewTaskId && (
+        <EngineerTaskReviewModal
+          taskId={reviewTaskId}
+          apiUrl={apiUrl}
+          getCsrfToken={getCsrfToken}
+          onClose={() => setReviewTaskId(null)}
+          onReviewed={(updatedTask) => {
+            setTasks(prev => prev.map(t => t.id === updatedTask.id ? updatedTask : t));
+            setReviewTaskId(null);
+          }}
+        />
       )}
     </div>
   );

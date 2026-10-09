@@ -47,6 +47,9 @@ public class Project {
 	@Column(name = "project_request_id")
 	private Long projectRequestId;
 
+	@Column(nullable = false)
+	private Integer progress = 0;
+
 	@Column(nullable = false, updatable = false)
 	private Instant createdAt;
 
@@ -139,6 +142,9 @@ public class Project {
 	public void setProjectRequestId(Long projectRequestId) {
 		this.projectRequestId = projectRequestId;
 	}
+
+	public Integer getProgress() { return progress; }
+	public void setProgress(Integer progress) { this.progress = progress; }
 
 	public Instant getCreatedAt() {
 		return createdAt;

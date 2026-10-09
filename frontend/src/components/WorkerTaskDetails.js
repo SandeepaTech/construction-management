@@ -10,6 +10,9 @@ export function WorkerTaskDetails({ taskId, apiUrl, getCsrfToken, onBack, user }
   // Progress form state
   const [progressUpdate, setProgressUpdate] = useState('');
   const [progressNote, setProgressNote] = useState('');
+  
+  // Submit for review state
+  const [finalNote, setFinalNote] = useState('');
 
   const fetchData = async () => {
     try {
@@ -88,6 +91,41 @@ export function WorkerTaskDetails({ taskId, apiUrl, getCsrfToken, onBack, user }
       const updatedTask = await res.json();
       setTask(updatedTask);
       setProgressNote('');
+      
+      // Refresh history
+      const histRes = await fetch(`${apiUrl}/api/worker/tasks/${taskId}/progress`, { credentials: 'include' });
+      if (histRes.ok) setHistory(await histRes.json());
+      
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleSubmitReview = async (e) => {
+    e.preventDefault();
+    setBusy(true);
+    setError('');
+    try {
+      const csrfToken = await getCsrfToken();
+      const res = await fetch(`${apiUrl}/api/worker/tasks/${taskId}/submit`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-XSRF-TOKEN': csrfToken
+        },
+        body: JSON.stringify({ note: finalNote })
+      });
+      
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || err.detail || 'Failed to submit for review');
+      }
+      
+      const updatedTask = await res.json();
+      setTask(updatedTask);
       
       // Refresh history
       const histRes = await fetch(`${apiUrl}/api/worker/tasks/${taskId}/progress`, { credentials: 'include' });
@@ -190,43 +228,70 @@ export function WorkerTaskDetails({ taskId, apiUrl, getCsrfToken, onBack, user }
             <div style={{ background: '#f0fdf4', padding: '16px', borderRadius: '8px', color: '#166534', textAlign: 'center' }}>
               This task is completed. Progress can no longer be updated.
             </div>
+          ) : task.status === 'UNDER_REVIEW' ? (
+            <div style={{ background: '#fffbeb', padding: '16px', borderRadius: '8px', color: '#b45309', border: '1px solid #fef3c7', textAlign: 'center' }}>
+              Waiting for Site Engineer review. You cannot change progress right now.
+            </div>
           ) : (
-            <form onSubmit={handleUpdateProgress} style={{ background: '#f8fafc', padding: '24px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-              <h4 style={{ margin: '0 0 16px 0', fontSize: '15px' }}>Update Progress</h4>
-              <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
-                <div style={{ width: '100px' }}>
-                  <label htmlFor="progress" style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px' }}>% Complete</label>
-                  <input 
-                    id="progress" 
-                    type="number" 
-                    min="0" 
-                    max="100" 
-                    value={progressUpdate} 
-                    onChange={e => setProgressUpdate(e.target.value)}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+              <form onSubmit={handleUpdateProgress} style={{ background: '#f8fafc', padding: '24px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                <h4 style={{ margin: '0 0 16px 0', fontSize: '15px' }}>Update Progress</h4>
+                <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+                  <div style={{ width: '100px' }}>
+                    <label htmlFor="progress" style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px' }}>% Complete</label>
+                    <input 
+                      id="progress" 
+                      type="number" 
+                      min="0" 
+                      max="100" 
+                      value={progressUpdate} 
+                      onChange={e => setProgressUpdate(e.target.value)}
+                      required
+                      style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1' }}
+                    />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <label htmlFor="progressNote" style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px' }}>Progress Note (Optional)</label>
+                    <input 
+                      id="progressNote" 
+                      type="text"
+                      value={progressNote}
+                      onChange={e => setProgressNote(e.target.value)}
+                      placeholder="e.g. Completed front trenches"
+                      style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1' }}
+                    />
+                  </div>
+                  <div style={{ paddingTop: '24px' }}>
+                    <button type="submit" className="primary-button" disabled={busy}>Update</button>
+                  </div>
+                </div>
+              </form>
+
+              {task.progress === 100 && (
+                <form onSubmit={handleSubmitReview} style={{ background: '#f0fdfa', padding: '24px', borderRadius: '8px', border: '1px solid #ccfbf1' }}>
+                  <h4 style={{ margin: '0 0 8px 0', fontSize: '16px', color: '#0f766e' }}>Submit for Review</h4>
+                  <p style={{ margin: '0 0 16px 0', fontSize: '13px', color: '#0f766e' }}>The work is marked as 100% complete. Add a final work note and submit it to the Site Engineer.</p>
+                  
+                  <label htmlFor="finalNote" style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#0f766e' }}>Final Work Note (Required)</label>
+                  <textarea 
+                    id="finalNote" 
+                    value={finalNote}
+                    onChange={e => setFinalNote(e.target.value)}
+                    placeholder="Enter details about the completed work..."
                     required
-                    style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1' }}
+                    rows="3"
+                    style={{ width: '100%', padding: '12px', borderRadius: '6px', border: '1px solid #99f6e4', marginBottom: '16px', resize: 'vertical' }}
                   />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <label htmlFor="progressNote" style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px' }}>Progress Note (Optional)</label>
-                  <input 
-                    id="progressNote" 
-                    type="text"
-                    value={progressNote}
-                    onChange={e => setProgressNote(e.target.value)}
-                    placeholder="e.g. Completed front trenches"
-                    style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1' }}
-                  />
-                </div>
-                <div style={{ paddingTop: '24px' }}>
-                  <button type="submit" className="primary-button" disabled={busy}>Update</button>
-                </div>
-              </div>
-            </form>
+                  <button type="submit" className="primary-button" style={{ background: '#0f766e' }} disabled={busy}>
+                    {busy ? 'Submitting...' : 'Submit for Review'}
+                  </button>
+                </form>
+              )}
+            </div>
           )
         ) : (
           <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '8px', color: '#64748b', textAlign: 'center' }}>
-            This task progress is managed by the Lead Worker ({task.leadWorker?.fullName}).
+            {task.status === 'UNDER_REVIEW' ? 'Waiting for Site Engineer review.' : `This task progress is managed by the Lead Worker (${task.leadWorker?.fullName}).`}
           </div>
         )}
 

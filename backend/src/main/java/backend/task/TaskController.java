@@ -1,5 +1,6 @@
 package backend.task;
 
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -28,13 +29,28 @@ public class TaskController {
 	private final ProjectRepository projectRepository;
 	private final AppUserRepository userRepository;
 	private final NotificationService notificationService;
+	private final TaskProgressUpdateRepository progressRepository;
 
 	public TaskController(TaskRepository taskRepository, ProjectRepository projectRepository,
-			AppUserRepository userRepository, NotificationService notificationService) {
+			AppUserRepository userRepository, NotificationService notificationService,
+			TaskProgressUpdateRepository progressRepository) {
 		this.taskRepository = taskRepository;
 		this.projectRepository = projectRepository;
 		this.userRepository = userRepository;
 		this.notificationService = notificationService;
+		this.progressRepository = progressRepository;
+	}
+
+	private void updateProjectProgress(Project project) {
+		List<Task> allTasks = taskRepository.findByProjectIdOrderByCreatedAtDesc(project.getId());
+		if (allTasks.isEmpty()) {
+			project.setProgress(0);
+		} else {
+			long completed = allTasks.stream().filter(t -> t.getStatus() == TaskStatus.COMPLETED).count();
+			int progress = (int) ((completed * 100) / allTasks.size());
+			project.setProgress(progress);
+		}
+		projectRepository.save(project);
 	}
 
 	@GetMapping("/workers")
@@ -115,11 +131,82 @@ public class TaskController {
 		);
 
 		Task savedTask = taskRepository.save(task);
+		updateProjectProgress(project);
 
 		for (AppUser worker : assignedWorkers) {
 			notificationService.notifyUser(worker, "New Task Assigned", 
 					"You have been assigned to: " + task.getTitle() + " for project " + project.getName(), 
 					"/worker/tasks/" + savedTask.getId());
+		}
+
+		return TaskResponse.from(savedTask);
+	}
+
+	@PostMapping("/tasks/{taskId}/approve")
+	public TaskResponse approveTask(@PathVariable Long taskId, Authentication authentication) {
+		AppUser user = userRepository.findByEmailIgnoreCase(authentication.getName())
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
+
+		Task task = taskRepository.findById(taskId)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found"));
+
+		if (!task.getAssignedSiteEngineer().getId().equals(user.getId())) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not authorized to review this task");
+		}
+
+		if (task.getStatus() != TaskStatus.UNDER_REVIEW) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Task is not UNDER_REVIEW");
+		}
+
+		task.setStatus(TaskStatus.COMPLETED);
+		task.setProgress(100);
+		task.setCompletedAt(Instant.now());
+		task.setReviewedBy(user);
+		task.setUpdatedAt(Instant.now());
+
+		Task savedTask = taskRepository.save(task);
+		updateProjectProgress(task.getProject());
+
+		for (AppUser worker : task.getAssignedWorkers()) {
+			notificationService.notifyUser(worker, "Task Completed", 
+					task.getTitle() + " has been approved by Site Engineer " + user.getFullName() + ".", 
+					"/worker/tasks/" + task.getId());
+		}
+
+		return TaskResponse.from(savedTask);
+	}
+
+	@PostMapping("/tasks/{taskId}/rework")
+	public TaskResponse returnTaskForRework(@PathVariable Long taskId, @RequestBody TaskProgressRequest request, Authentication authentication) {
+		AppUser user = userRepository.findByEmailIgnoreCase(authentication.getName())
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
+
+		Task task = taskRepository.findById(taskId)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found"));
+
+		if (!task.getAssignedSiteEngineer().getId().equals(user.getId())) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not authorized to review this task");
+		}
+
+		if (task.getStatus() != TaskStatus.UNDER_REVIEW) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Task is not UNDER_REVIEW");
+		}
+
+		if (request.getNote() == null || request.getNote().trim().isEmpty()) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Rework reason is required");
+		}
+
+		task.setStatus(TaskStatus.IN_PROGRESS);
+		task.setUpdatedAt(Instant.now());
+		Task savedTask = taskRepository.save(task);
+
+		TaskProgressUpdate history = new TaskProgressUpdate(savedTask, task.getProgress(), "RETURNED FOR REWORK: " + request.getNote(), user);
+		progressRepository.save(history);
+
+		for (AppUser worker : task.getAssignedWorkers()) {
+			notificationService.notifyUser(worker, "Task Returned for Rework", 
+					task.getTitle() + " has been returned for rework by " + user.getFullName() + ". Reason: " + request.getNote(), 
+					"/worker/tasks/" + task.getId());
 		}
 
 		return TaskResponse.from(savedTask);

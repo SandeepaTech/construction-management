@@ -1795,7 +1795,6 @@ function App() {
         </section>
       </main>
     );
-    );
   }
 
   if (user && user.role === 'FIELD_WORKER' && currentPath.startsWith('/worker')) {
