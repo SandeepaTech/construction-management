@@ -1763,6 +1763,7 @@ function App() {
               <EngineerProjectDetails
                 projectId={engineerProjectDetailsMatch[1]}
                 apiUrl={API_URL}
+                getCsrfToken={getCsrfToken}
                 onBack={() => navigate('/engineer/projects')}
               />
             )}

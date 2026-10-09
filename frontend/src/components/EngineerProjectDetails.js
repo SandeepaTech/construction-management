@@ -1,22 +1,33 @@
 import React, { useState, useEffect } from 'react';
+import { EngineerTaskCreateForm } from './EngineerTaskCreateForm';
 
-export function EngineerProjectDetails({ projectId, apiUrl, onBack }) {
+export function EngineerProjectDetails({ projectId, apiUrl, getCsrfToken, onBack }) {
   const [project, setProject] = useState(null);
+  const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [showCreateTask, setShowCreateTask] = useState(false);
 
   useEffect(() => {
     let mounted = true;
     fetch(`${apiUrl}/api/engineer/projects/${projectId}`, { credentials: 'include' })
       .then(async (res) => {
-        if (!res.ok) {
-          throw new Error('Failed to load project details.');
+        if (!res.ok) throw new Error('Failed to load project details.');
+        const projData = await res.json();
+        
+        // Fetch tasks
+        const tasksRes = await fetch(`${apiUrl}/api/engineer/projects/${projectId}/tasks`, { credentials: 'include' });
+        let tasksData = [];
+        if (tasksRes.ok) {
+          tasksData = await tasksRes.json();
         }
-        return res.json();
+        
+        return { projData, tasksData };
       })
-      .then((data) => {
+      .then(({ projData, tasksData }) => {
         if (mounted) {
-          setProject(data);
+          setProject(projData);
+          setTasks(tasksData);
           setError('');
         }
       })
@@ -120,7 +131,7 @@ export function EngineerProjectDetails({ projectId, apiUrl, onBack }) {
         </div>
       </div>
       
-      <div className="client-panel" style={{ padding: '24px' }}>
+      <div className="client-panel" style={{ padding: '24px', marginBottom: '24px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
           <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '24px', height: '24px', borderRadius: '50%', background: '#0f172a', color: 'white', fontSize: '12px', fontWeight: 'bold' }}>3</span>
           <h3 style={{ margin: 0, fontSize: '14px', textTransform: 'uppercase', letterSpacing: '0.5px', color: '#0f172a' }}>Progress Overview</h3>
@@ -134,9 +145,83 @@ export function EngineerProjectDetails({ projectId, apiUrl, onBack }) {
           <div style={{ width: '100%', height: '8px', background: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
             <div style={{ width: '0%', height: '100%', background: '#3b82f6' }}></div>
           </div>
-          <p style={{ margin: '8px 0 0 0', fontSize: '13px', color: '#64748b' }}>Task and material management modules will be available soon.</p>
         </div>
       </div>
+
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '48px', marginBottom: '24px' }}>
+        <h2 style={{ margin: 0, fontSize: '20px', color: '#0f172a' }}>Project Tasks</h2>
+        {!showCreateTask && (
+          <button className="primary-button" onClick={() => setShowCreateTask(true)}>
+            + Create Task
+          </button>
+        )}
+      </div>
+
+      {showCreateTask && (
+        <EngineerTaskCreateForm 
+          projectId={projectId}
+          apiUrl={apiUrl}
+          getCsrfToken={getCsrfToken}
+          onCancel={() => setShowCreateTask(false)}
+          onSuccess={(newTask) => {
+            setTasks(prev => [newTask, ...prev]);
+            setShowCreateTask(false);
+          }}
+        />
+      )}
+
+      {!showCreateTask && tasks.length === 0 && (
+        <div className="client-panel" style={{ padding: '40px', textAlign: 'center' }}>
+          <p style={{ color: '#64748b', margin: 0 }}>No tasks have been created for this project yet.</p>
+        </div>
+      )}
+
+      {!showCreateTask && tasks.length > 0 && (
+        <div className="table-responsive client-panel">
+          <table className="custom-data-table">
+            <thead>
+              <tr>
+                <th>TASK</th>
+                <th>LEAD WORKER</th>
+                <th>WORKERS</th>
+                <th>START DATE</th>
+                <th>DUE DATE</th>
+                <th>PRIORITY</th>
+                <th>STATUS</th>
+                <th>PROGRESS</th>
+                <th>ACTION</th>
+              </tr>
+            </thead>
+            <tbody>
+              {tasks.map(task => (
+                <tr key={task.id}>
+                  <td>
+                    <strong>{task.title}</strong>
+                  </td>
+                  <td>{task.leadWorker?.fullName || 'Unassigned'}</td>
+                  <td>{task.assignedWorkers?.length || 0}</td>
+                  <td>{task.startDate || '—'}</td>
+                  <td>{task.dueDate || '—'}</td>
+                  <td>
+                    <span className={`status-badge priority-${task.priority.toLowerCase()}`}>
+                      {task.priority}
+                    </span>
+                  </td>
+                  <td>
+                    <span className={`status-badge status-${task.status.toLowerCase()}`}>
+                      {task.status.replace(/_/g, ' ')}
+                    </span>
+                  </td>
+                  <td>{task.progress}%</td>
+                  <td>
+                    <button className="table-action-btn">View</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }
