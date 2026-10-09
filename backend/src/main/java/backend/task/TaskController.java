@@ -115,6 +115,12 @@ public class TaskController {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Lead worker must be one of the assigned workers");
 		}
 
+		if (request.getStartDate() != null && request.getDueDate() != null) {
+			if (request.getDueDate().isBefore(request.getStartDate())) {
+				throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Due date cannot be earlier than start date.");
+			}
+		}
+
 		Task task = new Task(
 				request.getTitle(),
 				request.getDescription(),

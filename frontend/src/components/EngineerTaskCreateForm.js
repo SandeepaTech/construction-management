@@ -80,6 +80,15 @@ export function EngineerTaskCreateForm({ projectId, apiUrl, getCsrfToken, onCanc
       return;
     }
 
+    if (form.startDate && form.dueDate) {
+      const start = new Date(form.startDate);
+      const due = new Date(form.dueDate);
+      if (due < start) {
+        setError('Due date cannot be earlier than start date.');
+        return;
+      }
+    }
+
     setBusy(true);
     try {
       const csrfToken = await getCsrfToken();
