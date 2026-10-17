@@ -57,9 +57,20 @@ export function AdminProjectDetails({
         <button type="button" className="back-link-btn" onClick={onBack}>
           ← Back to Project Requests
         </button>
-        <div className="header-status-group">
-          <span className="eyebrow">PROJECT STATUS:</span>
-          <span className="status-badge status-approved">{project.status || 'PLANNED'}</span>
+        <div className="header-status-group" style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+            <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 600, marginBottom: '4px' }}>PROJECT PROGRESS</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ width: '80px', height: '6px', background: '#e2e8f0', borderRadius: '3px', overflow: 'hidden' }}>
+                <div style={{ width: `${project.progress || 0}%`, height: '100%', background: (project.progress || 0) === 100 ? '#10b981' : '#3b82f6' }}></div>
+              </div>
+              <strong style={{ fontSize: '14px', color: '#0f172a' }}>{project.progress || 0}%</strong>
+            </div>
+          </div>
+          <div>
+            <span className="eyebrow" style={{ display: 'block', marginBottom: '4px' }}>PROJECT STATUS</span>
+            <span className={`status-badge status-${project.status ? project.status.toLowerCase() : 'planned'}`}>{project.status || 'PLANNED'}</span>
+          </div>
         </div>
       </div>
 

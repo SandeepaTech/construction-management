@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { AttachmentViewer } from './AttachmentViewer';
+
 
 export function EngineerProjectRequestDetails({
   requestId,
@@ -225,148 +225,213 @@ export function EngineerProjectRequestDetails({
           )}
         </div>
 
-        <div className="details-card full-width">
-          <div className="card-header-styled">
-            <span className="card-sec-badge">4</span>
-            <h3>ATTACHMENTS &amp; REFERENCE PLANS ({request.attachments?.length || 0})</h3>
-          </div>
-          <AttachmentViewer
-            attachments={request.attachments}
-            requestId={request.id}
-            apiUrl={apiUrl}
-          />
-        </div>
       </div>
 
-      <div className="details-card full-width" style={{ marginTop: '32px', marginBottom: '64px' }}>
-        <div className="card-header-styled" style={{ backgroundColor: '#2b3648' }}>
-          <span className="card-sec-badge" style={{ backgroundColor: '#fff', color: '#2b3648' }}>5</span>
-          <h3 style={{ color: '#fff' }}>TECHNICAL ASSESSMENT</h3>
+      <div className="details-card full-width technical-assessment-card" style={{ marginTop: '32px', marginBottom: '64px', padding: 0 }}>
+        <div className="assessment-header-styled">
+          <div className="assessment-header-content">
+            <span className="assessment-sec-badge">5</span>
+            <div className="assessment-title-group">
+              <h3>TECHNICAL ASSESSMENT</h3>
+              <p>Evaluate the technical feasibility, risks, site conditions, and provide your professional recommendation.</p>
+            </div>
+          </div>
+          <div className="assessment-header-bg-graphics"></div>
         </div>
         
-        <form onSubmit={handleSubmit} style={{ padding: '24px' }}>
-          <div className="modal-grid-fields">
-            <div className="form-field">
-              <label>Site Feasibility <span className="req">*</span></label>
-              <select
-                value={form.siteFeasibility}
-                onChange={(e) => setForm({ ...form, siteFeasibility: e.target.value })}
-                required
-                disabled={!isEditable}
-              >
-                <option value="SUITABLE">SUITABLE</option>
-                <option value="SUITABLE_WITH_CONDITIONS">SUITABLE WITH CONDITIONS</option>
-                <option value="NOT_SUITABLE">NOT SUITABLE</option>
-              </select>
+        <form onSubmit={handleSubmit} className="assessment-form-body" style={{ padding: '32px' }}>
+          <div className="assessment-grid-layout">
+            
+            <div className="assessment-field">
+              <div className="assessment-field-header">
+                <span className="field-icon blue-icon">🏢</span>
+                <div className="field-labels">
+                  <label>Site Feasibility <span className="req">*</span></label>
+                  <span className="field-desc">Assess if the project is technically feasible at the proposed location.</span>
+                </div>
+              </div>
+              <div className="select-with-dot">
+                <span className="select-dot" style={{backgroundColor: form.siteFeasibility.includes('NOT') ? '#e74c3c' : '#2ecc71'}}></span>
+                <select
+                  value={form.siteFeasibility}
+                  onChange={(e) => setForm({ ...form, siteFeasibility: e.target.value })}
+                  required
+                  disabled={!isEditable}
+                >
+                  <option value="SUITABLE">SUITABLE</option>
+                  <option value="SUITABLE_WITH_CONDITIONS">SUITABLE WITH CONDITIONS</option>
+                  <option value="NOT_SUITABLE">NOT SUITABLE</option>
+                </select>
+              </div>
             </div>
 
-            <div className="form-field">
-              <label>Technical Risk <span className="req">*</span></label>
-              <select
-                value={form.technicalRisk}
-                onChange={(e) => setForm({ ...form, technicalRisk: e.target.value })}
-                required
-                disabled={!isEditable}
-              >
-                <option value="LOW">LOW</option>
-                <option value="MEDIUM">MEDIUM</option>
-                <option value="HIGH">HIGH</option>
-              </select>
+            <div className="assessment-field">
+              <div className="assessment-field-header">
+                <span className="field-icon red-icon">⚠️</span>
+                <div className="field-labels">
+                  <label>Technical Risk <span className="req">*</span></label>
+                  <span className="field-desc">Evaluate the overall technical risk level.</span>
+                </div>
+              </div>
+              <div className="select-with-dot">
+                <span className="select-dot" style={{backgroundColor: form.technicalRisk === 'LOW' ? '#2ecc71' : form.technicalRisk === 'MEDIUM' ? '#f39c12' : '#e74c3c'}}></span>
+                <select
+                  value={form.technicalRisk}
+                  onChange={(e) => setForm({ ...form, technicalRisk: e.target.value })}
+                  required
+                  disabled={!isEditable}
+                >
+                  <option value="LOW">LOW</option>
+                  <option value="MEDIUM">MEDIUM</option>
+                  <option value="HIGH">HIGH</option>
+                </select>
+              </div>
             </div>
 
-            <div className="form-field full-width">
-              <label>Estimated Construction Duration (Optional)</label>
-              <input
-                type="text"
-                value={form.estimatedDuration}
-                onChange={(e) => setForm({ ...form, estimatedDuration: e.target.value })}
-                placeholder="e.g. 9 months"
-                disabled={!isEditable}
-              />
+            <div className="assessment-field">
+              <div className="assessment-field-header">
+                <span className="field-icon blue-icon">📅</span>
+                <div className="field-labels">
+                  <label>Estimated Construction Duration (Optional)</label>
+                  <span className="field-desc">Your estimated time to complete the construction.</span>
+                </div>
+              </div>
+              <div className="input-with-icon">
+                <span className="input-icon">🗓️</span>
+                <input
+                  type="text"
+                  value={form.estimatedDuration}
+                  onChange={(e) => setForm({ ...form, estimatedDuration: e.target.value })}
+                  placeholder="e.g. 9 months"
+                  disabled={!isEditable}
+                />
+              </div>
             </div>
 
-            <div className="form-field full-width">
-              <label>Site Conditions</label>
+            <div className="assessment-field">
+              <div className="assessment-field-header">
+                <span className="field-icon blue-icon">📍</span>
+                <div className="field-labels">
+                  <label>Site Conditions</label>
+                  <span className="field-desc">Describe the current site conditions (access, terrain, soil, etc.).</span>
+                </div>
+              </div>
               <textarea
-                rows={2}
+                rows={3}
                 value={form.siteConditions}
                 onChange={(e) => setForm({ ...form, siteConditions: e.target.value })}
-                placeholder="Describe current site conditions..."
+                placeholder="Site is easily accessible by main road. Land is flat and stable..."
                 disabled={!isEditable}
               />
             </div>
 
-            <div className="form-field full-width">
-              <label>Recommended Construction Notes</label>
+            <div className="assessment-field">
+              <div className="assessment-field-header">
+                <span className="field-icon blue-icon">📄</span>
+                <div className="field-labels">
+                  <label>Recommended Construction Notes</label>
+                  <span className="field-desc">Any special notes or recommendations for construction.</span>
+                </div>
+              </div>
               <textarea
-                rows={2}
+                rows={3}
                 value={form.recommendedConstructionNotes}
                 onChange={(e) => setForm({ ...form, recommendedConstructionNotes: e.target.value })}
-                placeholder="Any special notes for construction..."
+                placeholder="Follow standard construction practices..."
                 disabled={!isEditable}
               />
             </div>
 
-            <div className="form-field full-width">
-              <label>Major Material Requirements</label>
+            <div className="assessment-field">
+              <div className="assessment-field-header">
+                <span className="field-icon blue-icon">📚</span>
+                <div className="field-labels">
+                  <label>Major Material Requirements</label>
+                  <span className="field-desc">List any key material requirements or special considerations.</span>
+                </div>
+              </div>
               <textarea
-                rows={2}
+                rows={3}
                 value={form.majorMaterialRequirements}
                 onChange={(e) => setForm({ ...form, majorMaterialRequirements: e.target.value })}
+                placeholder="Standard construction materials can be used..."
                 disabled={!isEditable}
               />
             </div>
 
-            <div className="form-field full-width">
-              <label>Safety / Engineering Concerns</label>
+            <div className="assessment-field">
+              <div className="assessment-field-header">
+                <span className="field-icon blue-icon">🛡️</span>
+                <div className="field-labels">
+                  <label>Safety / Engineering Concerns</label>
+                  <span className="field-desc">Mention any safety issues, engineering constraints, or risks.</span>
+                </div>
+              </div>
               <textarea
-                rows={2}
+                rows={3}
                 value={form.safetyEngineeringConcerns}
                 onChange={(e) => setForm({ ...form, safetyEngineeringConcerns: e.target.value })}
+                placeholder="No major safety concerns..."
                 disabled={!isEditable}
               />
             </div>
 
-            <div className="form-field full-width" style={{ marginTop: '16px', padding: '16px', backgroundColor: '#f5f5f5', borderRadius: '4px' }}>
-              <label style={{ fontSize: '1.1em', color: '#1a1a1a' }}>Technical Recommendation <span className="req">*</span></label>
-              <select
-                value={form.recommendation}
-                onChange={(e) => setForm({ ...form, recommendation: e.target.value })}
-                required
-                disabled={!isEditable}
-                style={{ fontSize: '1.05em', padding: '10px' }}
-              >
-                <option value="RECOMMEND_APPROVAL">RECOMMEND APPROVAL</option>
-                <option value="CHANGES_REQUIRED">CHANGES REQUIRED</option>
-                <option value="NOT_FEASIBLE">NOT FEASIBLE</option>
-              </select>
+            <div className="assessment-field highlighted-field">
+              <div className="assessment-field-header">
+                <span className="field-icon gold-icon">💡</span>
+                <div className="field-labels">
+                  <label>Technical Recommendation <span className="req">*</span></label>
+                  <span className="field-desc">Your final technical recommendation for this project.</span>
+                </div>
+              </div>
+              <div className="select-with-dot">
+                <span className="select-dot" style={{backgroundColor: form.recommendation.includes('APPROVAL') ? '#2ecc71' : form.recommendation.includes('CHANGES') ? '#f39c12' : '#e74c3c'}}></span>
+                <select
+                  value={form.recommendation}
+                  onChange={(e) => setForm({ ...form, recommendation: e.target.value })}
+                  required
+                  disabled={!isEditable}
+                >
+                  <option value="RECOMMEND_APPROVAL">RECOMMEND APPROVAL</option>
+                  <option value="CHANGES_REQUIRED">CHANGES REQUIRED</option>
+                  <option value="NOT_FEASIBLE">NOT FEASIBLE</option>
+                </select>
+              </div>
             </div>
 
-            <div className="form-field full-width">
-              <label>Engineer Comments (Internal) <span className="req">*</span></label>
+            <div className="assessment-field full-span">
+              <div className="assessment-field-header">
+                <span className="field-icon blue-icon">💬</span>
+                <div className="field-labels">
+                  <label>Engineer Comments (Internal) <span className="req">*</span></label>
+                  <span className="field-desc">Additional comments for the Admin / Project Manager (not visible to client).</span>
+                </div>
+              </div>
               <textarea
-                rows={4}
+                rows={3}
                 value={form.engineerComments}
                 onChange={(e) => setForm({ ...form, engineerComments: e.target.value })}
                 required
                 disabled={!isEditable}
-                placeholder="Detailed comments for the Admin / Project Manager..."
+                placeholder="Project is technically feasible. Site conditions are good..."
               />
             </div>
+
           </div>
 
-          {isEditable && (
-            <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'flex-end' }}>
-              <button
-                type="submit"
-                className="client-primary-button"
-                style={{ fontSize: '1.1em', padding: '12px 24px' }}
-                disabled={busy}
-              >
-                {busy ? 'Submitting…' : 'Send Assessment to Admin'}
+          <div className="assessment-form-footer">
+            <button type="button" className="btn-footer-back" onClick={onBack}>← Back</button>
+            <div className="footer-right-actions">
+              <button type="button" className="btn-footer-draft" disabled={!isEditable}>
+                💾 Save as Draft
               </button>
+              {isEditable && (
+                <button type="submit" className="btn-footer-submit" disabled={busy}>
+                  🚀 {busy ? 'Submitting…' : 'Submit Assessment'}
+                </button>
+              )}
             </div>
-          )}
+          </div>
         </form>
       </div>
     </div>

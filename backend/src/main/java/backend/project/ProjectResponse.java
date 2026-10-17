@@ -21,6 +21,7 @@ public record ProjectResponse(
 		Long assignedEngineerId,
 		String assignedEngineerName,
 		Long projectRequestId,
+		Integer progress,
 		Instant createdAt) {
 
 	public static ProjectResponse from(Project project) {
@@ -43,6 +44,7 @@ public record ProjectResponse(
 				site != null && site.getAssignedEngineer() != null ? site.getAssignedEngineer().getId() : null,
 				site != null && site.getAssignedEngineer() != null ? site.getAssignedEngineer().getFullName() : null,
 				project.getProjectRequestId(),
+				project.getProgress(),
 				project.getCreatedAt());
 	}
 }

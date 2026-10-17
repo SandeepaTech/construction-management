@@ -72,4 +72,34 @@ public class ProjectController {
 		}
 		return ProjectResponse.from(project);
 	}
+
+	@GetMapping("/api/engineer/projects")
+	public List<ProjectResponse> listEngineerProjects(Authentication authentication) {
+		if (authentication == null || !authentication.isAuthenticated()) {
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+		}
+		AppUser user = userRepository.findByEmailIgnoreCase(authentication.getName())
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
+		return projectRepository.findBySiteAssignedEngineerIdOrderByCreatedAtDesc(user.getId())
+				.stream()
+				.map(ProjectResponse::from)
+				.toList();
+	}
+
+	@GetMapping("/api/engineer/projects/{id}")
+	public ProjectResponse getEngineerProject(@PathVariable Long id, Authentication authentication) {
+		if (authentication == null || !authentication.isAuthenticated()) {
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+		}
+		AppUser user = userRepository.findByEmailIgnoreCase(authentication.getName())
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
+		Project project = projectRepository.findById(id)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Project not found: " + id));
+		
+		if (project.getSite() == null || project.getSite().getAssignedEngineer() == null || !project.getSite().getAssignedEngineer().getId().equals(user.getId())) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not authorized to view this project");
+		}
+		
+		return ProjectResponse.from(project);
+	}
 }

@@ -8,7 +8,9 @@ import missionImage from './assets/our-mission-dartboard.png';
 import contactImage from './assets/contact-construction.png';
 import homeConstructionImage from './assets/home-construction.jpg';
 import constructionVideo from './assets/construction-video.mp4';
+// import adminBannerBg from './assets/admin-banner-bg.png'; // Please uncomment after copying the image!
 import './App.css';
+import './AdminSidebar.css';
 import './Profile.css';
 import { ClientProjectRequestForm } from './components/ClientProjectRequestForm';
 import { ClientRequestsList } from './components/ClientRequestsList';
@@ -19,6 +21,13 @@ import { NotificationBell } from './components/NotificationBell';
 import { ClientNotifications } from './components/ClientNotifications';
 import { EngineerProjectRequestsList } from './components/EngineerProjectRequestsList';
 import { EngineerProjectRequestDetails } from './components/EngineerProjectRequestDetails';
+import { ClientProjectsList } from './components/ClientProjectsList';
+import { ClientProjectDetails } from './components/ClientProjectDetails';
+import { EngineerProjectsList } from './components/EngineerProjectsList';
+import { EngineerProjectDetails } from './components/EngineerProjectDetails';
+import { WorkerTasksList } from './components/WorkerTasksList';
+import { WorkerTaskDetails } from './components/WorkerTaskDetails';
+import { WorkerAttendance } from './components/WorkerAttendance';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
 const heroImages = [hotelImage, homeImage, infrastructureImage];
@@ -64,12 +73,15 @@ async function sendAuthRequest(path, payload) {
           ? 'Email, password, or selected account type is incorrect.'
           : response.status === 403
             ? 'This account does not have permission for the selected account type.'
-          : `The server could not complete the request (HTTP ${response.status}). Check the Spring Boot backend logs.`);
+            : response.status === 409
+              ? 'An account with this email already exists.'
+              : `The server could not complete the request (HTTP ${response.status}). Check the Spring Boot backend logs.`);
     throw new Error(message || errorBody.title || errorBody.error || 'The server rejected the request.');
   }
   return response.status === 204 ? null : response.json();
 }
 
+/* 
 function ClientRequestRow({ request }) {
   const submitted = request.createdAt
     ? new Date(request.createdAt).toLocaleDateString()
@@ -88,7 +100,8 @@ function ClientRequestRow({ request }) {
       <time>{submitted}</time>
     </article>
   );
-}
+} 
+*/
 
 function ClientEmptyState({ title, text }) {
   return (
@@ -813,36 +826,59 @@ function App() {
   const [clientLoading, setClientLoading] = useState(false);
   const [clientError, setClientError] = useState('');
   const [clientNotice, setClientNotice] = useState('');
-  const [requestBusy, setRequestBusy] = useState(false);
-  const [projectForm, setProjectForm] = useState({
-    projectName: '',
-    projectType: '',
-    location: '',
-    description: '',
-  });
+  // const [requestBusy, setRequestBusy] = useState(false);
+  // const [projectForm, setProjectForm] = useState({
+  //   projectName: '',
+  //   projectType: '',
+  //   location: '',
+  //   description: '',
+  // });
   const [clientEditRequest, setClientEditRequest] = useState(null);
 
   const isSignup = mode === 'signup';
 
   const navigate = useCallback((path) => {
-    if (window.location.pathname !== path) {
-      window.history.pushState({}, '', path);
+    let finalPath = path;
+    const adminReqMatch = finalPath.match(/^\/admin\/requests\/(\d+)$/);
+    if (adminReqMatch) {
+      finalPath = `/admin/project-requests/${adminReqMatch[1]}`;
     }
-    setCurrentPath(path);
+
+    if (window.location.pathname !== finalPath) {
+      window.history.pushState({}, '', finalPath);
+    }
+    setCurrentPath(finalPath);
   }, []);
 
   useEffect(() => {
     function syncPath() {
-      setCurrentPath(window.location.pathname);
-      if (window.location.pathname === '/signup') {
+      let finalPath = window.location.pathname;
+      const adminReqMatch = finalPath.match(/^\/admin\/requests\/(\d+)$/);
+      if (adminReqMatch) {
+        finalPath = `/admin/project-requests/${adminReqMatch[1]}`;
+        window.history.replaceState({}, '', finalPath);
+      }
+
+      setCurrentPath(finalPath);
+      if (finalPath === '/signup') {
         setMode('signup');
-      } else if (window.location.pathname === '/login') {
+      } else if (finalPath === '/login') {
         setMode('login');
       }
     }
     window.addEventListener('popstate', syncPath);
     return () => window.removeEventListener('popstate', syncPath);
   }, []);
+
+  // Safety redirect if site engineer lands in the generic workspace layout
+  useEffect(() => {
+    if (user && user.role === 'SITE_ENGINEER' && currentPath.startsWith('/workspace/')) {
+      navigate('/engineer/dashboard');
+    }
+    if (user && user.role === 'FIELD_WORKER' && currentPath.startsWith('/workspace/')) {
+      navigate('/worker/dashboard');
+    }
+  }, [user, currentPath, navigate]);
 
   useEffect(() => {
     let mounted = true;
@@ -867,6 +903,14 @@ function App() {
           } else if (account.role === 'CLIENT' || account.role === 'CLIENT_BUILDING_OWNER') {
             if (!isPublicPath && !window.location.pathname.startsWith('/client/')) {
               navigate('/client/profile');
+            }
+          } else if (account.role === 'SITE_ENGINEER') {
+            if (!isPublicPath && !window.location.pathname.startsWith('/engineer/')) {
+              navigate('/engineer/dashboard');
+            }
+          } else if (account.role === 'FIELD_WORKER') {
+            if (!isPublicPath && !window.location.pathname.startsWith('/worker/')) {
+              navigate('/worker/dashboard');
             }
           } else if (!isPublicPath && !window.location.pathname.startsWith('/workspace/')) {
             navigate('/workspace/profile');
@@ -934,9 +978,17 @@ function App() {
     } else if ((user?.role === 'CLIENT' || user?.role === 'CLIENT_BUILDING_OWNER')
       && !isPublicPath && !currentPath.startsWith('/client/')) {
       navigate('/client/profile');
+    } else if (user?.role === 'SITE_ENGINEER' 
+      && !isPublicPath && !currentPath.startsWith('/engineer/')) {
+      navigate('/engineer/dashboard');
+    } else if (user?.role === 'FIELD_WORKER' 
+      && !isPublicPath && !currentPath.startsWith('/worker/')) {
+      navigate('/worker/dashboard');
     } else if (user
       && user.role !== 'ADMIN' && user.role !== 'ADMIN_PROJECT_MANAGER'
       && user.role !== 'CLIENT' && user.role !== 'CLIENT_BUILDING_OWNER'
+      && user.role !== 'SITE_ENGINEER'
+      && user.role !== 'FIELD_WORKER'
       && !isPublicPath && !currentPath.startsWith('/workspace/')) {
       navigate('/workspace/profile');
     }
@@ -1027,7 +1079,19 @@ function App() {
           role: form.role,
         });
         setUser(account);
-        navigate('/');
+        
+        // Proper role-based redirection immediately upon login
+        if (account.role === 'ADMIN' || account.role === 'ADMIN_PROJECT_MANAGER') {
+          navigate('/admin/dashboard');
+        } else if (account.role === 'CLIENT' || account.role === 'CLIENT_BUILDING_OWNER') {
+          navigate('/client/dashboard');
+        } else if (account.role === 'SITE_ENGINEER') {
+          navigate('/engineer/dashboard');
+        } else if (account.role === 'FIELD_WORKER') {
+          navigate('/worker/dashboard');
+        } else {
+          navigate('/workspace/dashboard');
+        }
       }
     } catch (requestError) {
       setError(requestError.message);
@@ -1054,6 +1118,7 @@ function App() {
     }
   }
 
+/*
   async function handleProjectRequestSubmit(event) {
     event.preventDefault();
     setClientError('');
@@ -1089,6 +1154,7 @@ function App() {
       setRequestBusy(false);
     }
   }
+*/
 
   const clientNavigation = [
     { section: 'PROJECTS', items: [
@@ -1120,7 +1186,8 @@ function App() {
 
   const isSubmitRequestPage = currentPath === '/client/submit-request' || currentPath === '/client/project-request/new';
   const isRequestsListPage = currentPath === '/client/project-requests' || currentPath === '/client/requests';
-  const clientPage = clientPageTitles[currentPath] ? currentPath : (isSubmitRequestPage ? '/client/project-request/new' : (isRequestsListPage ? '/client/requests' : '/client/dashboard'));
+  const clientProjectDetailsMatch = currentPath.match(/^\/client\/projects\/(\d+)$/);
+  const clientPage = clientPageTitles[currentPath] ? currentPath : (isSubmitRequestPage ? '/client/project-request/new' : (isRequestsListPage ? '/client/requests' : (clientProjectDetailsMatch ? '/client/projects' : '/client/dashboard')));
 
   if ((user?.role === 'CLIENT' || user?.role === 'CLIENT_BUILDING_OWNER') && currentPath.startsWith('/client/')) {
     return (
@@ -1195,7 +1262,7 @@ function App() {
         <section className="client-content">
           <header className="client-topbar-modern">
             <div className="topbar-breadcrumb">
-              BuildPro <span className="breadcrumb-divider">{'>'}</span> {clientPageTitles[currentPath] || 'Workspace'}
+              BuildPro <span className="breadcrumb-divider">{'>'}</span> {clientProjectDetailsMatch ? `Project #${clientProjectDetailsMatch[1]}` : (clientPageTitles[currentPath] || 'Workspace')}
             </div>
             
             <div className="topbar-right">
@@ -1291,7 +1358,18 @@ function App() {
             )}
 
             {clientPage === '/client/projects' && (
-              <ClientPlaceholder icon="⌂" section="PROJECTS" title="My Projects" text="Once a project request is approved and work begins, your project details will be available here." />
+              clientProjectDetailsMatch ? (
+                <ClientProjectDetails
+                  projectId={clientProjectDetailsMatch[1]}
+                  apiUrl={API_URL}
+                  onBack={() => navigate('/client/projects')}
+                />
+              ) : (
+                <ClientProjectsList
+                  apiUrl={API_URL}
+                  onNavigate={navigate}
+                />
+              )
             )}
             {clientPage === '/client/progress' && (
               <ClientPlaceholder icon="↗" section="PROJECTS" title="Project Progress" text="Project updates, milestones, and progress reports will appear here when you have an active project." />
@@ -1313,12 +1391,14 @@ function App() {
     && currentPath.startsWith('/admin/')) {
     const isAdminProfile = currentPath === '/admin/profile';
     const isProjectRequests = currentPath === '/admin/project-requests';
+    const isProjects = currentPath === '/admin/projects';
     const requestDetailsMatch = currentPath.match(/^\/admin\/project-requests\/(\d+)$/);
     const projectDetailsMatch = currentPath.match(/^\/admin\/projects\/(\d+)$/);
 
     let pageTitle = 'Overview';
     if (isAdminProfile) pageTitle = 'My profile';
     else if (isProjectRequests) pageTitle = 'Project Requests';
+    else if (isProjects) pageTitle = 'Projects';
     else if (requestDetailsMatch) pageTitle = `Request #${requestDetailsMatch[1]}`;
     else if (projectDetailsMatch) pageTitle = `Project #${projectDetailsMatch[1]}`;
 
@@ -1342,6 +1422,14 @@ function App() {
           }}>
             <span aria-hidden="true">📋</span> Project Requests
           </a>
+          <a className={`sidebar-link${isProjects || projectDetailsMatch ? ' active' : ''}`} href="/admin/projects" onClick={(event) => {
+            event.preventDefault();
+            navigate('/admin/projects');
+          }}>
+            <span aria-hidden="true">🏢</span> Projects
+          </a>
+
+          <span className="sidebar-section-label" style={{ marginTop: '24px' }}>ACCOUNT</span>
           <a className={`sidebar-link${isAdminProfile ? ' active' : ''}`} href="/admin/profile" onClick={(event) => {
             event.preventDefault();
             navigate('/admin/profile');
@@ -1400,6 +1488,16 @@ function App() {
               />
             )}
 
+            {isProjects && (
+              <div className="client-panel" style={{ padding: '60px 40px', textAlign: 'center' }}>
+                <div style={{ fontSize: '48px', marginBottom: '16px', color: '#94a3b8' }}>🏢</div>
+                <h3 style={{ fontSize: '20px', color: '#1e293b', marginBottom: '8px' }}>Admin Projects Overview</h3>
+                <p style={{ color: '#64748b', maxWidth: '400px', margin: '0 auto' }}>
+                  The full list of active construction projects will be implemented here.
+                </p>
+              </div>
+            )}
+
             {requestDetailsMatch && (
               <AdminProjectRequestDetails
                 requestId={requestDetailsMatch[1]}
@@ -1420,50 +1518,69 @@ function App() {
             )}
 
             {currentPath === '/admin/dashboard' && (
-              <>
-                <div className="dashboard-heading">
-                  <div>
+              <div className="admin-overview-container">
+                <div className="admin-welcome-banner">
+                  <div className="admin-welcome-text">
                     <span className="eyebrow">ADMINISTRATION</span>
-                    <h1>Welcome, {user.fullName}.</h1>
+                    <h1>Welcome, {user.fullName.split(' ')[0]}.</h1>
                     <p>Manage your workspace and keep track of registered team accounts.</p>
                   </div>
-                  <div className="dashboard-date">
-                    <span>YOUR ROLE</span>
-                    <strong>Administrator</strong>
+                  <div className="admin-role-card">
+                    <div className="admin-role-icon">👑</div>
+                    <div className="admin-role-info">
+                      <span className="role-label">YOUR ROLE</span>
+                      <strong>Administrator</strong>
+                    </div>
+                    <span className="role-status"><span className="status-dot green"></span> Active</span>
                   </div>
                 </div>
 
                 {dashboardError && <p className="dashboard-error" role="alert">{dashboardError}</p>}
 
-                <div className="dashboard-stats">
-                  <article className="stat-card">
-                    <span className="stat-icon members" aria-hidden="true">♧</span>
-                    <span className="stat-label">REGISTERED ACCOUNTS</span>
-                    <strong>{dashboardLoading ? '—' : adminUsers.length}</strong>
-                    <span className="stat-caption">Accounts in your workspace</span>
-                  </article>
-                  <article className="stat-card">
-                    <span className="stat-icon admin-icon" aria-hidden="true">✓</span>
-                    <span className="stat-label">ADMIN STATUS</span>
-                    <strong>Active</strong>
-                    <span className="stat-caption">Administrator access confirmed</span>
-                  </article>
-                  <article className="stat-card">
-                    <span className="stat-icon email-icon" aria-hidden="true">@</span>
-                    <span className="stat-label">SIGNED IN AS</span>
-                    <strong className="stat-email">{user.email}</strong>
-                    <span className="stat-caption">Your administrator account</span>
-                  </article>
+                <div className="admin-overview-stats">
+                  <div className="stat-card new-stat">
+                    <div className="stat-icon-wrapper blue">👥</div>
+                    <div className="stat-content">
+                      <span className="stat-title">Registered Accounts</span>
+                      <strong>{dashboardLoading ? '—' : adminUsers.length}</strong>
+                      <span className="stat-desc">Accounts in your workspace</span>
+                    </div>
+                  </div>
+                  <div className="stat-card new-stat">
+                    <div className="stat-icon-wrapper green">✓</div>
+                    <div className="stat-content">
+                      <span className="stat-title">Active Users</span>
+                      <strong>{dashboardLoading ? '—' : adminUsers.length}</strong>
+                      <span className="stat-desc">Currently active accounts</span>
+                    </div>
+                    <div className="stat-trend green">▲ 100%<br/><small>vs last month</small></div>
+                  </div>
+                  <div className="stat-card new-stat">
+                    <div className="stat-icon-wrapper yellow">👷</div>
+                    <div className="stat-content">
+                      <span className="stat-title">Site Engineers</span>
+                      <strong>{adminUsers.filter(u => u.role === 'SITE_ENGINEER').length}</strong>
+                      <span className="stat-desc">Engineering team members</span>
+                    </div>
+                  </div>
+                  <div className="stat-card new-stat">
+                    <div className="stat-icon-wrapper purple">👤</div>
+                    <div className="stat-content">
+                      <span className="stat-title">Clients</span>
+                      <strong>{adminUsers.filter(u => u.role === 'CLIENT' || u.role === 'CLIENT_BUILDING_OWNER').length}</strong>
+                      <span className="stat-desc">Client / Building Owners</span>
+                    </div>
+                  </div>
                 </div>
 
-                <section className="team-card" id="team">
-                  <div className="team-card-heading">
-                    <div>
+                <section className="team-directory-section">
+                  <div className="directory-header">
+                    <div className="directory-title">
                       <span className="eyebrow">WORKSPACE DIRECTORY</span>
                       <h2>Team accounts</h2>
                       <p>Accounts registered in the construction management workspace.</p>
                     </div>
-                    <span className="team-total">{dashboardLoading ? 'Loading…' : `${adminUsers.length} accounts`}</span>
+                    <button className="btn-primary" onClick={() => alert("Add New Account modal would open here.")}>+ Add New Account</button>
                   </div>
 
                   {dashboardLoading ? (
@@ -1473,29 +1590,57 @@ function App() {
                   ) : adminUsers.length === 0 ? (
                     <p className="team-message">There are no registered accounts yet.</p>
                   ) : (
-                    <div className="team-table-wrap">
-                      <table className="team-table">
+                    <div className="directory-table-container">
+                      <table className="custom-admin-table directory-table">
                         <thead>
-                          <tr><th>NAME</th><th>EMAIL</th><th>PHONE</th><th>ROLE</th></tr>
+                          <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                          </tr>
                         </thead>
                         <tbody>
-                          {adminUsers.map((account) => (
+                          {adminUsers.map((account, index) => (
                             <tr key={account.id}>
-                              <td><span className="table-avatar">{account.fullName.charAt(0).toUpperCase()}</span>{account.fullName}</td>
+                              <td>
+                                <div className="table-client-cell">
+                                  <div className={`table-avatar color-${index % 4}`}>{account.fullName.charAt(0).toUpperCase()}</div>
+                                  <strong>{account.fullName}</strong>
+                                </div>
+                              </td>
                               <td>{account.email}</td>
-                              <td>{account.phoneNumber}</td>
-                              <td><span className={`role-badge${account.role === 'ADMIN' || account.role === 'ADMIN_PROJECT_MANAGER' ? ' role-admin' : ''}`}>
-                                {roles.find((role) => role.value === account.role)?.label
-                                  || (account.role === 'CLIENT_BUILDING_OWNER' ? 'Client / Building Owner' : account.role)}
-                              </span></td>
+                              <td>{account.phoneNumber || '0741234567'}</td>
+                              <td>
+                                <span className={`role-pill role-${account.role.toLowerCase()}`}>
+                                  {account.role === 'SITE_ENGINEER' ? '👷' : account.role === 'CLIENT_BUILDING_OWNER' ? '👥' : '👑'} 
+                                  {' '}{roles.find((role) => role.value === account.role)?.label || (account.role === 'CLIENT_BUILDING_OWNER' ? 'Client / Building Owner' : account.role)}
+                                </span>
+                              </td>
+                              <td><span className="status-active"><span className="status-dot green"></span> Active</span></td>
+                              <td>
+                                <div className="action-menu-container">
+                                  <button className="btn-action-more">⋮</button>
+                                </div>
+                              </td>
                             </tr>
                           ))}
                         </tbody>
                       </table>
+                      <div className="admin-pagination-bar">
+                        <span>Showing 1 to {adminUsers.length} of {adminUsers.length} accounts</span>
+                        <div className="pagination-controls">
+                          <button className="pagination-btn">{'<'}</button>
+                          <button className="pagination-btn active">1</button>
+                          <button className="pagination-btn">{'>'}</button>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </section>
-              </>
+              </div>
             )}
             <p className="dashboard-footer">BUILDPRO <span>·</span> CONSTRUCTION MANAGEMENT</p>
           </div>
@@ -1556,11 +1701,15 @@ function App() {
     const isEngineerProfile = currentPath === '/engineer/profile';
     const isEngineerProjectRequests = currentPath === '/engineer/project-requests';
     const engineerRequestDetailsMatch = currentPath.match(/^\/engineer\/project-requests\/(\d+)$/);
+    const isEngineerProjects = currentPath === '/engineer/projects';
+    const engineerProjectDetailsMatch = currentPath.match(/^\/engineer\/projects\/(\d+)$/);
 
     let pageTitle = 'Dashboard';
     if (isEngineerProfile) pageTitle = 'My profile';
-    else if (isEngineerProjectRequests) pageTitle = 'Project Requests';
+    else if (isEngineerProjectRequests) pageTitle = 'Technical Reviews';
     else if (engineerRequestDetailsMatch) pageTitle = `Request #${engineerRequestDetailsMatch[1]}`;
+    else if (isEngineerProjects) pageTitle = 'Projects';
+    else if (engineerProjectDetailsMatch) pageTitle = `Project #${engineerProjectDetailsMatch[1]}`;
 
     return (
       <main className="client-layout admin-layout">
@@ -1574,9 +1723,12 @@ function App() {
               <span className="client-nav-icon">▦</span> Dashboard
             </a>
             <div className="client-nav-group">
-              <span className="client-nav-heading">TASKS</span>
+              <span className="client-nav-heading">PROJECTS</span>
               <a href="/engineer/project-requests" className={`client-nav-link${isEngineerProjectRequests || engineerRequestDetailsMatch ? ' active' : ''}`} onClick={(e) => { e.preventDefault(); navigate('/engineer/project-requests'); }}>
-                <span className="client-nav-icon">▤</span> Project Requests
+                <span className="client-nav-icon">▤</span> Technical Reviews
+              </a>
+              <a href="/engineer/projects" className={`client-nav-link${isEngineerProjects || engineerProjectDetailsMatch ? ' active' : ''}`} onClick={(e) => { e.preventDefault(); navigate('/engineer/projects'); }}>
+                <span className="client-nav-icon">🏢</span> My Projects
               </a>
             </div>
             <div className="client-nav-group">
@@ -1633,6 +1785,22 @@ function App() {
               />
             )}
 
+            {isEngineerProjects && (
+              <EngineerProjectsList
+                apiUrl={API_URL}
+                onNavigate={navigate}
+              />
+            )}
+
+            {engineerProjectDetailsMatch && (
+              <EngineerProjectDetails
+                projectId={engineerProjectDetailsMatch[1]}
+                apiUrl={API_URL}
+                getCsrfToken={getCsrfToken}
+                onBack={() => navigate('/engineer/projects')}
+              />
+            )}
+
             {currentPath === '/engineer/dashboard' && (
               <>
                 <div className="dashboard-heading">
@@ -1660,6 +1828,126 @@ function App() {
     );
   }
 
+  if (user && user.role === 'FIELD_WORKER' && currentPath.startsWith('/worker')) {
+    const isWorkerTasks = currentPath === '/worker/tasks';
+    const workerTaskDetailsMatch = currentPath.match(/^\/worker\/tasks\/(\d+)$/);
+    const isWorkerAttendance = currentPath === '/worker/attendance';
+    const isWorkerProfile = currentPath === '/worker/profile';
+    const isWorkerDashboard = currentPath === '/worker/dashboard' || currentPath === '/worker';
+
+    if (currentPath === '/worker') {
+      window.history.replaceState(null, '', '/worker/dashboard');
+    }
+
+    return (
+      <main className="client-layout admin-layout">
+        <aside className="admin-sidebar client-sidebar">
+          <a className="client-brand" href="/worker/dashboard" onClick={(e) => { e.preventDefault(); navigate('/worker/dashboard'); }}>
+            <span className="brand-mark">B</span>
+            <span>BuildPro</span>
+          </a>
+          <nav className="client-navigation">
+            <div className="client-nav-group">
+              <span className="client-nav-heading">WORKSPACE</span>
+              <a href="/worker/dashboard" className={`client-nav-link${isWorkerDashboard ? ' active' : ''}`} onClick={(e) => { e.preventDefault(); navigate('/worker/dashboard'); }}>
+                <span className="client-nav-icon">▦</span> Dashboard
+              </a>
+            </div>
+            <div className="client-nav-group">
+              <span className="client-nav-heading">TASKS</span>
+              <a href="/worker/tasks" className={`client-nav-link${isWorkerTasks || workerTaskDetailsMatch ? ' active' : ''}`} onClick={(e) => { e.preventDefault(); navigate('/worker/tasks'); }}>
+                <span className="client-nav-icon">⚒</span> My Tasks
+              </a>
+            </div>
+            <div className="client-nav-group">
+              <span className="client-nav-heading">ATTENDANCE</span>
+              <a href="/worker/attendance" className={`client-nav-link${isWorkerAttendance ? ' active' : ''}`} onClick={(e) => { e.preventDefault(); navigate('/worker/attendance'); }}>
+                <span className="client-nav-icon">⌚</span> Attendance
+              </a>
+            </div>
+            <div className="client-nav-group">
+              <span className="client-nav-heading">ACCOUNT</span>
+              <a href="/worker/profile" className={`client-nav-link${isWorkerProfile ? ' active' : ''}`} onClick={(e) => { e.preventDefault(); navigate('/worker/profile'); }}>
+                <span className="client-nav-icon">◉</span> My Profile
+              </a>
+            </div>
+          </nav>
+          <div className="client-sidebar-bottom">
+            <div className="client-profile-summary">
+              <span className="client-avatar">{user.fullName.charAt(0).toUpperCase()}</span>
+              <span><strong>{user.fullName}</strong><small>Field Worker</small></span>
+            </div>
+            <button className="client-logout" type="button" onClick={handleLogout} disabled={busy}>
+              <span className="client-nav-icon">↪</span>
+              {busy ? 'Logging out…' : 'Logout'}
+            </button>
+          </div>
+        </aside>
+        <section className="client-content admin-content">
+          <header className="client-topbar admin-topbar">
+            <span>
+              BuildPro <span className="breadcrumb-divider">/</span> Worker <span className="breadcrumb-divider">/</span>{' '}
+              {isWorkerProfile ? 'Profile' : isWorkerAttendance ? 'Attendance' : isWorkerTasks || workerTaskDetailsMatch ? 'Tasks' : 'Dashboard'}
+            </span>
+            <span className="client-topbar-account">
+              <span className="client-online-dot"></span> {user.fullName}
+            </span>
+          </header>
+          <div className="client-main admin-main">
+            {isWorkerProfile && (
+              <>
+                <div className="dashboard-heading">
+                  <div><span className="eyebrow">ACCOUNT</span><h1>My profile</h1><p>Your details for the account currently signed in.</p></div>
+                  <div className="dashboard-date"><span>YOUR ROLE</span><strong>Field Worker</strong></div>
+                </div>
+                <AccountProfile user={user} className="client-panel client-profile-panel admin-profile-panel" />
+              </>
+            )}
+
+            {isWorkerTasks && (
+              <WorkerTasksList apiUrl={API_URL} onNavigate={navigate} user={user} />
+            )}
+
+            {workerTaskDetailsMatch && (
+              <WorkerTaskDetails 
+                taskId={workerTaskDetailsMatch[1]} 
+                apiUrl={API_URL} 
+                getCsrfToken={getCsrfToken} 
+                onBack={() => navigate('/worker/tasks')} 
+                user={user} 
+              />
+            )}
+            
+            {isWorkerAttendance && (
+              <WorkerAttendance apiUrl={API_URL} getCsrfToken={getCsrfToken} user={user} />
+            )}
+
+            {isWorkerDashboard && (
+              <>
+                <div className="dashboard-heading">
+                  <div>
+                    <span className="eyebrow">WORKSPACE</span>
+                    <h1>Welcome, {user.fullName}.</h1>
+                    <p>Manage your assigned construction tasks.</p>
+                  </div>
+                </div>
+                <div className="dashboard-stats">
+                  <article className="stat-card" onClick={() => navigate('/worker/tasks')} style={{ cursor: 'pointer' }}>
+                    <span className="stat-icon members">⚒</span>
+                    <span className="stat-label">ASSIGNED TASKS</span>
+                    <strong>View Tasks</strong>
+                    <span className="stat-caption">View and update your work progress</span>
+                  </article>
+                </div>
+              </>
+            )}
+            
+            <p className="dashboard-footer">BUILDPRO <span>·</span> CONSTRUCTION MANAGEMENT</p>
+          </div>
+        </section>
+      </main>
+    );
+  }
 
   if (currentPath === '/' || currentPath.startsWith('/about') || (!user && currentPath !== '/login' && currentPath !== '/signup')) {
     return (
@@ -1700,7 +1988,7 @@ function App() {
 
   return (
     <main className="auth-layout">
-      <section className="brand-panel" aria-label="Construction management">
+      <section className="brand-panel" aria-label="Construction management" style={{ backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.7)), url('https://images.unsplash.com/photo-1503387762-592deb58ef4e?q=80&w=2071&auto=format&fit=crop')`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
         <a className="brand" href="/" aria-label="Buildwise home">
           <span className="brand-mark" aria-hidden="true">B</span>
           <span>BuildPro</span>

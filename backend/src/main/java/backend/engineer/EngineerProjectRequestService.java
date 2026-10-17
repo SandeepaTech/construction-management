@@ -128,7 +128,7 @@ public class EngineerProjectRequestService {
 		notificationService.notifyAdmins(
 				"Technical Review Completed",
 				String.format("Site Engineer %s has completed the technical review for project request: '%s'.", engineer.getFullName(), request.getProjectName()),
-				"/admin/requests/" + request.getId()); // Adjust URL if needed, frontend might use /admin/project-requests/{id} but they navigate to correct place usually. Or we can just use /admin/project-requests. We'll use /admin/project-requests
+				"/admin/project-requests/" + request.getId());
 
 		return ProjectRequestResponse.from(request);
 	}

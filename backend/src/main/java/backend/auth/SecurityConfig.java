@@ -34,6 +34,7 @@ public class SecurityConfig {
 						.requestMatchers("/api/admin/**").hasAnyRole("ADMIN", "ADMIN_PROJECT_MANAGER")
 						.requestMatchers("/api/client/**").hasAnyRole("CLIENT", "CLIENT_BUILDING_OWNER")
 						.requestMatchers("/api/engineer/**").hasRole("SITE_ENGINEER")
+						.requestMatchers("/api/worker/**").hasRole("FIELD_WORKER")
 						.requestMatchers("/api/project-requests/**").authenticated()
 						.requestMatchers("/api/notifications/**").authenticated()
 						.anyRequest().permitAll())

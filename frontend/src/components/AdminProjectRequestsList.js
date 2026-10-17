@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { getStatusBadgeClass, formatStatusLabel } from './ClientRequestsList';
+import './AdminProjectRequestsList.css';
 
 const ALL_PROJECT_TYPES = [
   'Home Construction',
@@ -60,6 +61,10 @@ export function AdminProjectRequestsList({
     assignedSiteEngineerId: '',
   });
   const [approveBusy, setApproveBusy] = useState(false);
+
+  const [sendEngineerModalReq, setSendEngineerModalReq] = useState(null);
+  const [sendEngineerForm, setSendEngineerForm] = useState({ siteEngineerId: '', adminNote: '' });
+  const [sendEngineerBusy, setSendEngineerBusy] = useState(false);
 
   const fetchRequests = useCallback(async () => {
     setLoading(true);
@@ -246,6 +251,43 @@ export function AdminProjectRequestsList({
     }
   }
 
+  async function handleSendEngineerSubmit(e) {
+    e.preventDefault();
+    if (!sendEngineerForm.siteEngineerId) {
+      setError('Please select a site engineer.');
+      return;
+    }
+    setSendEngineerBusy(true);
+    try {
+      const csrfToken = await getCsrfToken();
+      const res = await fetch(`${apiUrl}/api/admin/project-requests/${sendEngineerModalReq.id}/send-to-engineer`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-XSRF-TOKEN': csrfToken,
+        },
+        body: JSON.stringify({
+          siteEngineerId: Number(sendEngineerForm.siteEngineerId),
+          adminNote: sendEngineerForm.adminNote.trim(),
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || 'Failed to send to site engineer.');
+      }
+      const updated = await res.json();
+      setRequests((prev) => prev.map((r) => (r.id === updated.id ? updated : r)));
+      setNotice(`Request #${updated.id} assigned to Site Engineer.`);
+      setSendEngineerModalReq(null);
+      setSendEngineerForm({ siteEngineerId: '', adminNote: '' });
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSendEngineerBusy(false);
+    }
+  }
+
   return (
     <div className="admin-requests-section">
       <div className="dashboard-heading">
@@ -254,14 +296,38 @@ export function AdminProjectRequestsList({
           <h1>Client Project Requests</h1>
           <p>Review, assess, request modifications, or approve client construction project proposals.</p>
         </div>
-        <div className="requests-summary-stats">
-          <div className="stat-pill">
-            <span>TOTAL</span>
-            <strong>{requests.length}</strong>
+        <div className="admin-requests-stats">
+          <div className="stat-box">
+            <div className="stat-box-icon blue">📄</div>
+            <div className="stat-box-content">
+              <span>Total Requests</span>
+              <strong>{requests.length}</strong>
+              <small>All project requests</small>
+            </div>
           </div>
-          <div className="stat-pill pill-pending">
-            <span>PENDING</span>
-            <strong>{requests.filter((r) => r.status === 'PENDING').length}</strong>
+          <div className="stat-box">
+            <div className="stat-box-icon orange">🕒</div>
+            <div className="stat-box-content">
+              <span>Pending</span>
+              <strong>{requests.filter((r) => r.status === 'PENDING').length}</strong>
+              <small>Awaiting review</small>
+            </div>
+          </div>
+          <div className="stat-box">
+            <div className="stat-box-icon indigo">⚙️</div>
+            <div className="stat-box-content">
+              <span>In Review</span>
+              <strong>{requests.filter((r) => r.status === 'SENT_TO_SITE_ENGINEER' || r.status === 'UNDER_REVIEW' || r.status === 'UNDER_ADMIN_REVIEW' || r.status === 'NEEDS_REVISION').length}</strong>
+              <small>With engineers</small>
+            </div>
+          </div>
+          <div className="stat-box">
+            <div className="stat-box-icon green">✅</div>
+            <div className="stat-box-content">
+              <span>Approved</span>
+              <strong>{requests.filter((r) => r.status === 'APPROVED').length}</strong>
+              <small>Approved projects</small>
+            </div>
           </div>
         </div>
       </div>
@@ -329,7 +395,7 @@ export function AdminProjectRequestsList({
             <table className="team-table custom-admin-table">
               <thead>
                 <tr>
-                  <th>REQ ID</th>
+                  <th>#</th>
                   <th>CLIENT</th>
                   <th>PROJECT</th>
                   <th>PROPERTY</th>
@@ -351,15 +417,22 @@ export function AdminProjectRequestsList({
                     <tr key={req.id}>
                       <td className="bold-cell">#{req.id}</td>
                       <td>
-                        <strong>{req.clientName || 'Client'}</strong>
-                        <span className="table-subtext">{req.clientEmail}</span>
+                        <div className="table-client-cell">
+                          <div className={`table-avatar color-${req.id % 4}`}>
+                            {req.clientName ? req.clientName.substring(0, 2).toUpperCase() : 'CL'}
+                          </div>
+                          <div>
+                            <strong>{req.clientName || 'Client'}</strong>
+                            <div className="table-subtext">{req.clientEmail}</div>
+                          </div>
+                        </div>
                       </td>
                       <td>
                         <strong>{req.projectName}</strong>
-                        <span className="table-subtext">{req.projectType}</span>
+                        <div className="table-subtext">{req.projectType}</div>
                       </td>
-                      <td>{req.propertyType || '—'}</td>
-                      <td>{req.location}</td>
+                      <td><span className="icon-text">🏠 {req.propertyType || '—'}</span></td>
+                      <td><span className="icon-text">📍 {req.location}</span></td>
                       <td>{req.estimatedBudget || '—'}</td>
                       <td>{req.preferredStartDate || '—'}</td>
                       <td>{dateStr}</td>
@@ -374,63 +447,51 @@ export function AdminProjectRequestsList({
                         </span>
                       </td>
                       <td>
-                        <div className="admin-actions-cell">
+                        <div className="table-actions-group">
                           <button
                             type="button"
-                            className="btn-action-view"
+                            className="btn-action-view-new"
                             onClick={() => onViewDetails(req.id)}
                             title="View Full Request Details"
                           >
-                            View
+                            👁️ View
                           </button>
+                          
+                          <div className="action-menu-container">
+                            <button className="btn-action-more">⋮</button>
+                            <div className="action-menu-dropdown">
+                              {req.status === 'PENDING' && (
+                                <button type="button" onClick={() => handleMarkUnderReview(req.id)}>
+                                  Mark Under Review
+                                </button>
+                              )}
 
-                          {req.status === 'PENDING' && (
-                            <button
-                              type="button"
-                              className="btn-action-secondary"
-                              onClick={() => handleMarkUnderReview(req.id)}
-                              title="Mark Under Review"
-                            >
-                              Under Review
-                            </button>
-                          )}
+                              {req.status !== 'APPROVED' && req.status !== 'REJECTED' && (
+                                <>
+                                  <button type="button" onClick={() => { 
+                                    setSendEngineerModalReq(req); 
+                                    setSendEngineerForm({ siteEngineerId: '', adminNote: '' }); 
+                                  }}>
+                                    Assign to Site Engineer
+                                  </button>
 
-                          {req.status !== 'APPROVED' && req.status !== 'REJECTED' && (
-                            <>
-                              <button
-                                type="button"
-                                className="btn-action-revision"
-                                onClick={() => {
-                                  setRevisionModalReq(req);
-                                  setRevisionReason('');
-                                }}
-                                title="Request Changes / Revisions"
-                              >
-                                Changes
-                              </button>
+                                  <button type="button" onClick={() => { setRevisionModalReq(req); setRevisionReason(''); }}>
+                                    Request Changes
+                                  </button>
 
-                              <button
-                                type="button"
-                                className="btn-action-approve"
-                                onClick={() => openApproveModal(req)}
-                                title="Approve Request & Create Project"
-                              >
-                                Approve
-                              </button>
+                                  {req.status === 'ENGINEER_REVIEW_COMPLETED' && (
+                                    <button type="button" onClick={() => openApproveModal(req)}>
+                                      Approve
+                                    </button>
+                                  )}
 
-                              <button
-                                type="button"
-                                className="btn-action-reject"
-                                onClick={() => {
-                                  setRejectModalReq(req);
-                                  setRejectionReason('');
-                                }}
-                                title="Reject Request"
-                              >
-                                Reject
-                              </button>
-                            </>
-                          )}
+                                  <button type="button" style={{color: '#d32f2f'}} onClick={() => { setRejectModalReq(req); setRejectionReason(''); }}>
+                                    Reject Request
+                                  </button>
+                                </>
+                              )}
+                            </div>
+                          </div>
                         </div>
                       </td>
                     </tr>
@@ -438,6 +499,17 @@ export function AdminProjectRequestsList({
                 })}
               </tbody>
             </table>
+          </div>
+        )}
+        
+        {!loading && requests.length > 0 && (
+          <div className="admin-pagination-bar">
+            <span>Showing 1 to {requests.length} of {requests.length} requests</span>
+            <div className="pagination-controls">
+              <button className="pagination-btn">{'<'}</button>
+              <button className="pagination-btn active">1</button>
+              <button className="pagination-btn">{'>'}</button>
+            </div>
           </div>
         )}
       </div>
@@ -489,6 +561,72 @@ export function AdminProjectRequestsList({
                   disabled={revisionBusy}
                 >
                   {revisionBusy ? 'Sending…' : 'Send Revision Request'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* SEND TO SITE ENGINEER MODAL */}
+      {sendEngineerModalReq && (
+        <div className="modal-backdrop" onClick={() => setSendEngineerModalReq(null)}>
+          <div className="admin-action-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <div>
+                <span className="eyebrow">ASSIGN TO ENGINEER · #{sendEngineerModalReq.id}</span>
+                <h3>Send to Site Engineer</h3>
+              </div>
+              <button
+                type="button"
+                className="modal-close-btn"
+                onClick={() => setSendEngineerModalReq(null)}
+              >
+                ✕
+              </button>
+            </div>
+            <form onSubmit={handleSendEngineerSubmit}>
+              <div className="modal-body">
+                <p>
+                  Assign <strong>{sendEngineerModalReq.projectName}</strong> for technical review.
+                </p>
+                <label htmlFor="siteEngineerSelect">Site Engineer <span className="req">*</span></label>
+                <select
+                  id="siteEngineerSelect"
+                  value={sendEngineerForm.siteEngineerId}
+                  onChange={(e) => setSendEngineerForm({ ...sendEngineerForm, siteEngineerId: e.target.value })}
+                  required
+                >
+                  <option value="">Select a Site Engineer</option>
+                  {siteEngineers.map((eng) => (
+                    <option key={eng.id} value={eng.id}>{eng.fullName} ({eng.email})</option>
+                  ))}
+                </select>
+
+                <label htmlFor="adminNote" style={{ marginTop: '16px', display: 'block' }}>Admin Note (Optional)</label>
+                <textarea
+                  id="adminNote"
+                  rows={3}
+                  value={sendEngineerForm.adminNote}
+                  onChange={(e) => setSendEngineerForm({ ...sendEngineerForm, adminNote: e.target.value })}
+                  placeholder="e.g. Please check the land plan and estimate budget feasibility."
+                />
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="modal-secondary-button"
+                  onClick={() => setSendEngineerModalReq(null)}
+                  disabled={sendEngineerBusy}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="client-primary-button"
+                  disabled={sendEngineerBusy}
+                >
+                  {sendEngineerBusy ? 'Assigning…' : 'Assign to Engineer'}
                 </button>
               </div>
             </form>
